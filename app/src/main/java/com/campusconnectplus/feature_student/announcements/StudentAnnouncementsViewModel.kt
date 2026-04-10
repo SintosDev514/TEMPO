@@ -1,0 +1,20 @@
+package com.campusconnectplus.feature_student.announcements
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.campusconnectplus.data.repository.AnnouncementRepository
+import com.campusconnectplus.data.repository.AnnouncementStatus
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+
+class StudentAnnouncementsViewModel(
+    private val repo: AnnouncementRepository
+) : ViewModel() {
+
+    val announcements: StateFlow<List<com.campusconnectplus.data.repository.Announcement>> =
+        repo.observeAnnouncements()
+            .map { list -> list.filter { it.status == AnnouncementStatus.ACTIVE } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+}
