@@ -6,14 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.campusconnectplus.data.repository.Media
 import com.campusconnectplus.data.repository.MediaRepository
 import com.campusconnectplus.data.repository.MediaType
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class AdminMediaViewModel(
+@HiltViewModel
+class AdminMediaViewModel @Inject constructor(
     private val repo: MediaRepository
 ) : ViewModel() {
 

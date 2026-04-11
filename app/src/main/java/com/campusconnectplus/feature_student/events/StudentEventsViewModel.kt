@@ -6,6 +6,7 @@ import com.campusconnectplus.core.ui.util.UiState
 import com.campusconnectplus.data.repository.Event
 import com.campusconnectplus.data.repository.EventRepository
 import com.campusconnectplus.data.repository.FavoriteRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,8 +14,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class StudentEventsViewModel(
+@HiltViewModel
+class StudentEventsViewModel @Inject constructor(
     private val eventRepo: EventRepository,
     private val favoriteRepo: FavoriteRepository
 ) : ViewModel() {

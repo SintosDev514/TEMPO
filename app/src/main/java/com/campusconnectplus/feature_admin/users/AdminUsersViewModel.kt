@@ -2,18 +2,24 @@ package com.campusconnectplus.feature_admin.users
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.campusconnectplus.data.repository.AuthRepository
+import com.campusconnectplus.data.repository.AuthResult
 import com.campusconnectplus.data.repository.User
 import com.campusconnectplus.data.repository.UserRepository
 import com.campusconnectplus.data.repository.UserRole
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AdminUsersViewModel(
-    private val repo: UserRepository
+@HiltViewModel
+class AdminUsersViewModel @Inject constructor(
+    private val repo: UserRepository,
+    private val authRepo: AuthRepository
 ) : ViewModel() {
 
     private val searchQuery = MutableStateFlow("")
@@ -41,6 +47,10 @@ class AdminUsersViewModel(
 
     fun setSearch(query: String) {
         searchQuery.value = query
+    }
+
+    suspend fun signUp(role: UserRole, name: String, email: String, password: String): AuthResult {
+        return authRepo.signUp(role, name, email, password)
     }
 
     fun setRole(userId: Long, roleLabel: String) {

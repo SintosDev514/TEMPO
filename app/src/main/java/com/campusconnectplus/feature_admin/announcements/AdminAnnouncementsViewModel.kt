@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.campusconnectplus.data.repository.Announcement
 import com.campusconnectplus.data.repository.AnnouncementRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AdminAnnouncementsViewModel(
+@HiltViewModel
+class AdminAnnouncementsViewModel @Inject constructor(
     private val repo: AnnouncementRepository
 ) : ViewModel() {
 

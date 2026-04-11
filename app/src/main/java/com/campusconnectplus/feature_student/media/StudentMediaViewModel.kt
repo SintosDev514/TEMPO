@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.campusconnectplus.data.repository.FavoriteRepository
 import com.campusconnectplus.data.repository.MediaRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class StudentMediaViewModel(
+@HiltViewModel
+class StudentMediaViewModel @Inject constructor(
     private val mediaRepo: MediaRepository,
     private val favoriteRepo: FavoriteRepository
 ) : ViewModel() {

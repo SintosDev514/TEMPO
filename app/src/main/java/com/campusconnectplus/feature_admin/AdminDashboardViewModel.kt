@@ -3,9 +3,12 @@ package com.campusconnectplus.feature_admin
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.campusconnectplus.data.repository.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import javax.inject.Inject
 
-class AdminDashboardViewModel(
+@HiltViewModel
+class AdminDashboardViewModel @Inject constructor(
     private val eventRepo: EventRepository,
     private val mediaRepo: MediaRepository,
     private val annRepo: AnnouncementRepository,

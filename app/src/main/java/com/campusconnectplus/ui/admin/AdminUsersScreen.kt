@@ -24,8 +24,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.campusconnectplus.core.di.LocalAppContainer
-import com.campusconnectplus.core.di.ServiceLocatorSeed
+import com.campusconnectplus.core.util.Constants
 import com.campusconnectplus.core.ui.components.FloatingScrollbar
 import com.campusconnectplus.data.repository.AuthResult
 import com.campusconnectplus.data.repository.UserRole
@@ -42,7 +41,6 @@ fun AdminUsersScreen(vm: AdminUsersViewModel) {
     var userToDelete by remember { mutableStateOf<Pair<Long, String>?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val container = LocalAppContainer.current
 
     CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
         Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
@@ -96,8 +94,8 @@ fun AdminUsersScreen(vm: AdminUsersViewModel) {
                             email = u.email,
                             role = roleDisplay(u.role),
                             active = u.active,
-                            canChangeRole = u.email != ServiceLocatorSeed.DEFAULT_ADMIN_EMAIL,
-                            canDelete = u.email != ServiceLocatorSeed.DEFAULT_ADMIN_EMAIL,
+                            canChangeRole = u.email != Constants.DEFAULT_ADMIN_EMAIL,
+                            canDelete = u.email != Constants.DEFAULT_ADMIN_EMAIL,
                             onRoleChange = { vm.setRole(u.id, it) },
                             onToggleActive = { vm.toggleActive(u.id) },
                             onDelete = { userToDelete = u.id to u.email }
@@ -114,7 +112,7 @@ fun AdminUsersScreen(vm: AdminUsersViewModel) {
                 onDismiss = { showCreateUser = false },
                 onCreate = { role, name, email, password ->
                     scope.launch {
-                        when (val result = container.authRepository.signUp(role, name, email, password)) {
+                        when (val result = vm.signUp(role, name, email, password)) {
                             is AuthResult.Success -> {
                                 snackbarHostState.showSnackbar("Account created for $email")
                                 showCreateUser = false

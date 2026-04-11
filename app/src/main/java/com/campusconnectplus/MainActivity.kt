@@ -3,46 +3,40 @@ package com.campusconnectplus
 import android.os.Bundle
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.campusconnectplus.core.di.LocalAppContainer
-import com.campusconnectplus.core.di.ServiceLocator
-import com.campusconnectplus.core.di.ServiceLocatorSeed
-import com.campusconnectplus.core.di.ViewModelFactories
-import com.campusconnectplus.core.util.DebugLog
 import com.campusconnectplus.core.ui.components.AdminScaffold
-import com.campusconnectplus.data.repository.UserRole
-import com.campusconnectplus.ui.admin.AdminTab
-import com.campusconnectplus.ui.admin.tabsForRole
 import com.campusconnectplus.core.ui.components.StudentScaffold
+import com.campusconnectplus.core.util.DebugLog
+import com.campusconnectplus.data.repository.UserRole
 import com.campusconnectplus.ui.admin.*
 import com.campusconnectplus.ui.student.*
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -69,27 +63,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         DebugLog.init(this)
-        val container = ServiceLocator.provideContainer(this)
 
         checkAndRequestPermissions()
 
         setContent {
+            val context = LocalContext.current
+            val authVm: com.campusconnectplus.feature_admin.auth.AuthViewModel = hiltViewModel(context as ComponentActivity)
             MaterialTheme {
-                CompositionLocalProvider(LocalAppContainer provides container) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     val nav = rememberNavController()
-
-                    LaunchedEffect(Unit) {
-                        try {
-                            ServiceLocatorSeed.ensureSeed(this@MainActivity, container)
-                            ServiceLocatorSeed.ensureDefaultAdminPassword(container, this@MainActivity)
-                            ServiceLocatorSeed.ensureDefaultAdminRole(container)
-                            DebugLog.log("MainActivity.kt:LaunchedEffect", "Seed and admin init completed", emptyMap(), "H1")
-                        } catch (e: Exception) {
-                            android.util.Log.e("MainActivity", "Init failed", e)
-                            DebugLog.log("MainActivity.kt:LaunchedEffect", "Init failed", mapOf("error" to (e.message ?: "")), "H1")
-                        }
-                    }
 
                     NavHost(
                         navController = nav,
@@ -109,8 +91,7 @@ class MainActivity : ComponentActivity() {
                     ) {
 
                         composable(StudentTab.Home.route) {
-                            val homeVm: com.campusconnectplus.feature_student.home.StudentHomeViewModel =
-                                viewModel(factory = ViewModelFactories.studentHomeFactory(LocalAppContainer.current))
+                            val homeVm: com.campusconnectplus.feature_student.home.StudentHomeViewModel = hiltViewModel()
                             LaunchedEffect(Unit) { DebugLog.log("MainActivity.kt:Home", "Student home composed", emptyMap(), "H1") }
                             Box(Modifier.fillMaxSize()) {
                                 StudentScaffold(
@@ -130,8 +111,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(StudentTab.Events.route) {
-                            val studentEventsVm: com.campusconnectplus.feature_student.events.StudentEventsViewModel =
-                                viewModel(factory = ViewModelFactories.studentEventsFactory(LocalAppContainer.current))
+                            val studentEventsVm: com.campusconnectplus.feature_student.events.StudentEventsViewModel = hiltViewModel()
                             Box(Modifier.fillMaxSize()) {
                                 StudentScaffold(
                                     currentRoute = StudentTab.Events.route,
@@ -143,8 +123,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(StudentTab.Media.route) {
-                            val studentMediaVm: com.campusconnectplus.feature_student.media.StudentMediaViewModel =
-                                viewModel(factory = ViewModelFactories.studentMediaFactory(LocalAppContainer.current))
+                            val studentMediaVm: com.campusconnectplus.feature_student.media.StudentMediaViewModel = hiltViewModel()
                             Box(Modifier.fillMaxSize()) {
                                 StudentScaffold(
                                     currentRoute = StudentTab.Media.route,
@@ -156,8 +135,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(StudentTab.Saved.route) {
-                            val studentSavedVm: com.campusconnectplus.feature_student.saved.StudentSavedViewModel =
-                                viewModel(factory = ViewModelFactories.studentSavedFactory(LocalAppContainer.current))
+                            val studentSavedVm: com.campusconnectplus.feature_student.saved.StudentSavedViewModel = hiltViewModel()
                             Box(Modifier.fillMaxSize()) {
                                 StudentScaffold(currentRoute = StudentTab.Saved.route, onNavigate = nav::navigate) {
                                     StudentSavedScreen(vm = studentSavedVm)
@@ -166,8 +144,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(StudentTab.Announcements.route) {
-                            val studentAnnVm: com.campusconnectplus.feature_student.announcements.StudentAnnouncementsViewModel =
-                                viewModel(factory = ViewModelFactories.studentAnnouncementsFactory(LocalAppContainer.current))
+                            val studentAnnVm: com.campusconnectplus.feature_student.announcements.StudentAnnouncementsViewModel = hiltViewModel()
                             Box(Modifier.fillMaxSize()) {
                                 StudentScaffold(
                                     currentRoute = StudentTab.Announcements.route,
@@ -179,9 +156,6 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("admin/login") {
-                            val activity = LocalContext.current as ComponentActivity
-                            val authVm: com.campusconnectplus.feature_admin.auth.AuthViewModel =
-                                viewModel(viewModelStoreOwner = activity, factory = ViewModelFactories.authFactory(LocalAppContainer.current))
                             val currentUser by authVm.currentUser.collectAsState()
                             LaunchedEffect(currentUser) {
                                 if (currentUser != null) {
@@ -204,9 +178,6 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(AdminTab.Dashboard.route) {
-                            val activity = LocalContext.current as ComponentActivity
-                            val authVm: com.campusconnectplus.feature_admin.auth.AuthViewModel =
-                                viewModel(viewModelStoreOwner = activity, factory = ViewModelFactories.authFactory(LocalAppContainer.current))
                             val currentUser by authVm.currentUser.collectAsState()
                             val allowedTabs = remember(currentUser?.role) { tabsForRole(currentUser?.role ?: UserRole.ADMIN) }
                             LaunchedEffect(currentUser) {
@@ -219,8 +190,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             if (currentUser != null && AdminTab.Dashboard.route in allowedTabs.map { it.route }) {
-                                val adminDashboardVm: com.campusconnectplus.feature_admin.AdminDashboardViewModel =
-                                    viewModel(factory = ViewModelFactories.adminDashboardFactory(LocalAppContainer.current))
+                                val adminDashboardVm: com.campusconnectplus.feature_admin.AdminDashboardViewModel = hiltViewModel()
                                 Box(Modifier.fillMaxSize()) {
                                     AdminScaffold(
                                         currentRoute = AdminTab.Dashboard.route,
@@ -238,9 +208,6 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(AdminTab.Events.route) {
-                            val activity = LocalContext.current as ComponentActivity
-                            val authVm: com.campusconnectplus.feature_admin.auth.AuthViewModel =
-                                viewModel(viewModelStoreOwner = activity, factory = ViewModelFactories.authFactory(LocalAppContainer.current))
                             val currentUser by authVm.currentUser.collectAsState()
                             val allowedTabs = remember(currentUser?.role) { tabsForRole(currentUser?.role ?: UserRole.ADMIN) }
                             LaunchedEffect(currentUser) {
@@ -251,8 +218,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             if (currentUser != null && AdminTab.Events.route in allowedTabs.map { it.route }) {
-                                val adminEventsVm: com.campusconnectplus.feature_admin.events.AdminEventsViewModel =
-                                    viewModel(factory = ViewModelFactories.adminEventsFactory(LocalAppContainer.current))
+                                val adminEventsVm: com.campusconnectplus.feature_admin.events.AdminEventsViewModel = hiltViewModel()
                                 Box(Modifier.fillMaxSize()) {
                                     AdminScaffold(
                                         currentRoute = AdminTab.Events.route,
@@ -270,9 +236,6 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(AdminTab.Media.route) {
-                            val activity = LocalContext.current as ComponentActivity
-                            val authVm: com.campusconnectplus.feature_admin.auth.AuthViewModel =
-                                viewModel(viewModelStoreOwner = activity, factory = ViewModelFactories.authFactory(LocalAppContainer.current))
                             val currentUser by authVm.currentUser.collectAsState()
                             val allowedTabs = remember(currentUser?.role) { tabsForRole(currentUser?.role ?: UserRole.ADMIN) }
                             LaunchedEffect(currentUser) {
@@ -283,8 +246,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             if (currentUser != null && AdminTab.Media.route in allowedTabs.map { it.route }) {
-                                val adminMediaVm: com.campusconnectplus.feature_admin.media.AdminMediaViewModel =
-                                    viewModel(factory = ViewModelFactories.adminMediaFactory(LocalAppContainer.current))
+                                val adminMediaVm: com.campusconnectplus.feature_admin.media.AdminMediaViewModel = hiltViewModel()
                                 Box(Modifier.fillMaxSize()) {
                                     AdminScaffold(
                                         currentRoute = AdminTab.Media.route,
@@ -302,9 +264,6 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(AdminTab.Announcements.route) {
-                            val activity = LocalContext.current as ComponentActivity
-                            val authVm: com.campusconnectplus.feature_admin.auth.AuthViewModel =
-                                viewModel(viewModelStoreOwner = activity, factory = ViewModelFactories.authFactory(LocalAppContainer.current))
                             val currentUser by authVm.currentUser.collectAsState()
                             val allowedTabs = remember(currentUser?.role) { tabsForRole(currentUser?.role ?: UserRole.ADMIN) }
                             LaunchedEffect(currentUser) {
@@ -315,8 +274,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             if (currentUser != null && AdminTab.Announcements.route in allowedTabs.map { it.route }) {
-                                val adminAnnVm: com.campusconnectplus.feature_admin.announcements.AdminAnnouncementsViewModel =
-                                    viewModel(factory = ViewModelFactories.adminAnnouncementsFactory(LocalAppContainer.current))
+                                val adminAnnVm: com.campusconnectplus.feature_admin.announcements.AdminAnnouncementsViewModel = hiltViewModel()
                                 Box(Modifier.fillMaxSize()) {
                                     AdminScaffold(
                                         currentRoute = AdminTab.Announcements.route,
@@ -334,9 +292,6 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(AdminTab.Users.route) {
-                            val activity = LocalContext.current as ComponentActivity
-                            val authVm: com.campusconnectplus.feature_admin.auth.AuthViewModel =
-                                viewModel(viewModelStoreOwner = activity, factory = ViewModelFactories.authFactory(LocalAppContainer.current))
                             val currentUser by authVm.currentUser.collectAsState()
                             val allowedTabs = remember(currentUser?.role) { tabsForRole(currentUser?.role ?: UserRole.ADMIN) }
                             LaunchedEffect(currentUser) {
@@ -347,8 +302,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             if (currentUser != null && AdminTab.Users.route in allowedTabs.map { it.route }) {
-                                val adminUsersVm: com.campusconnectplus.feature_admin.users.AdminUsersViewModel =
-                                    viewModel(factory = ViewModelFactories.adminUsersFactory(LocalAppContainer.current))
+                                val adminUsersVm: com.campusconnectplus.feature_admin.users.AdminUsersViewModel = hiltViewModel()
                                 Box(Modifier.fillMaxSize()) {
                                     AdminScaffold(
                                         currentRoute = AdminTab.Users.route,
@@ -366,9 +320,6 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(AdminTab.Settings.route) {
-                            val activity = LocalContext.current as ComponentActivity
-                            val authVm: com.campusconnectplus.feature_admin.auth.AuthViewModel =
-                                viewModel(viewModelStoreOwner = activity, factory = ViewModelFactories.authFactory(LocalAppContainer.current))
                             val currentUser by authVm.currentUser.collectAsState()
                             val allowedTabs = remember(currentUser?.role) { tabsForRole(currentUser?.role ?: UserRole.ADMIN) }
                             LaunchedEffect(currentUser) {
@@ -403,7 +354,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
         }
     }
 
