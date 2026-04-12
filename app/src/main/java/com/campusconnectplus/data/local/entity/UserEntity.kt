@@ -11,6 +11,6 @@ data class UserEntity(
     val role: String,
     val active: Boolean = true,
     val updatedAt: Long,
-    /** Hashed password (SHA-256 + salt); null for legacy or non-admin users. */
+
     val passwordHash: String? = null
 )

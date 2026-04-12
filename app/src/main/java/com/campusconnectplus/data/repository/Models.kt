@@ -3,16 +3,16 @@ package com.campusconnectplus.data.repository
 enum class MediaType { IMAGE, VIDEO }
 enum class EventCategory { ACADEMIC, CULTURAL, SPORTS }
 
-// Optional: use this if your Announcement UI is showing status
+
 enum class AnnouncementStatus { ACTIVE, ARCHIVED }
 
-// Optional: use this if your User UI toggles "active"
+
 enum class UserRole { STUDENT, ADMIN, ORGANIZER, MEDIA_TEAM }
 
 data class Event(
     val id: Long = 0L,
     val title: String,
-    val date: String,          // keep as String (UI shows it as text)
+    val date: String,   
     val venue: String,
     val description: String,
     val category: EventCategory,

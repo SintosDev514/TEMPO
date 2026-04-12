@@ -12,6 +12,6 @@ import androidx.room.PrimaryKey
 )
 data class FavoriteEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val type: String,    // "EVENT" or "MEDIA"
-    val refId: Long      // eventId or mediaId
+    val type: String,
+    val refId: Long
 )

@@ -38,8 +38,8 @@ class AdminMediaViewModel @Inject constructor(
 
     fun uploadMedia(uri: Uri, title: String, type: MediaType) {
         viewModelScope.launch {
-            // In a real-world app, you'd copy the file to internal storage here.
-            // For now, we'll store the URI string so it works locally.
+
+
             val newMedia = Media(
                 id = System.currentTimeMillis(),
                 eventId = 0L,
