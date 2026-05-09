@@ -18,8 +18,8 @@ class RoomUserRepository(
         dao.upsert(user.toEntity())
     }
 
-    override suspend fun delete(id: Long) {
-        dao.delete(id.toString())
+    override suspend fun delete(id: String) {
+        dao.delete(id)
     }
 
     override suspend fun getUserByEmail(email: String): User? =
@@ -29,11 +29,11 @@ class RoomUserRepository(
         dao.updatePasswordHash(email, passwordHash)
     }
 
-    override suspend fun setRole(userId: Long, role: UserRole) {
-        dao.updateRole(userId.toString(), role.name)
+    override suspend fun setRole(userId: String, role: UserRole) {
+        dao.updateRole(userId, role.name)
     }
 
-    override suspend fun setActive(userId: Long, active: Boolean) {
-        dao.updateActive(userId.toString(), active)
+    override suspend fun setActive(userId: String, active: Boolean) {
+        dao.updateActive(userId, active)
     }
 }

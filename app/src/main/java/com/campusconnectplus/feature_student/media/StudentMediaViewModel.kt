@@ -20,11 +20,11 @@ class StudentMediaViewModel @Inject constructor(
     val media = mediaRepo.observeMedia()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val favoriteMediaIds: StateFlow<Set<Long>> =
+    val favoriteMediaIds: StateFlow<Set<String>> =
         favoriteRepo.observeFavoriteMediaIds()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
-    fun toggleFavorite(mediaId: Long) {
+    fun toggleFavorite(mediaId: String) {
         viewModelScope.launch { favoriteRepo.toggleMedia(mediaId) }
     }
 }

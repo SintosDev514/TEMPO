@@ -7,4 +7,5 @@ interface MediaRepository {
     fun ofEvent(eventId: String): Flow<List<Media>>
     suspend fun upsert(media: Media)
     suspend fun delete(mediaId: String)
+    suspend fun uploadFile(bucket: String, path: String, byteArray: ByteArray): String
 }

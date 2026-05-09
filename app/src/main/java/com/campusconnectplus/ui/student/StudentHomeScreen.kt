@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import android.widget.Toast
 import com.campusconnectplus.core.ui.components.StatRingCanvas
+import com.campusconnectplus.data.repository.Event
 import com.campusconnectplus.feature_student.home.HomeStats
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.max
@@ -36,6 +37,7 @@ import kotlin.math.max
 @Composable
 fun StudentHomeScreen(
     homeStats: StateFlow<HomeStats>,
+    events: StateFlow<List<Event>>,
     onQuickNavigateEvents: () -> Unit,
     onQuickNavigateMedia: () -> Unit,
     onQuickNavigateSaved: () -> Unit,
@@ -43,9 +45,12 @@ fun StudentHomeScreen(
     onNavigateToAdmin: () -> Unit = {},
 ) {
     val stats by homeStats.collectAsState(initial = HomeStats())
+    val eventList by events.collectAsState(initial = emptyList())
+    
     val activeEvents = stats.eventsCount
     val totalPhotos = stats.mediaCount
     val savedItems = stats.savedCount
+    val announcementsCount = stats.announcementsCount
 
     val listState = rememberLazyListState()
 
@@ -68,13 +73,14 @@ fun StudentHomeScreen(
 
                 item { Spacer(Modifier.height(14.dp)) }
 
-                item {
-                    SectionTitle("Event Highlights")
-                    Spacer(Modifier.height(10.dp))
-                    EventHighlightsCarousel()
+                if (eventList.isNotEmpty()) {
+                    item {
+                        SectionTitle("Event Highlights")
+                        Spacer(Modifier.height(10.dp))
+                        EventHighlightsCarousel(eventList.take(5))
+                    }
+                    item { Spacer(Modifier.height(16.dp)) }
                 }
-
-                item { Spacer(Modifier.height(16.dp)) }
 
                 item {
                     SectionTitle("Quick Access")
@@ -86,17 +92,19 @@ fun StudentHomeScreen(
                         onAnnouncements = onQuickNavigateAnnouncements,
                         activeEvents = activeEvents,
                         totalPhotos = totalPhotos,
-                        savedItems = savedItems
+                        savedItems = savedItems,
+                        announcementsCount = announcementsCount
                     )
                 }
 
                 item { Spacer(Modifier.height(16.dp)) }
 
-                item {
-                    TrendingNowCard()
+                if (eventList.size > 5) {
+                    item {
+                        TrendingNowCard(eventList.drop(5).take(3))
+                    }
+                    item { Spacer(Modifier.height(24.dp)) }
                 }
-
-                item { Spacer(Modifier.height(24.dp)) }
             }
 
             // UI improvement: custom slim scrollbar (won’t “damage” UI like side scroll indicator)
@@ -197,19 +205,18 @@ private fun SectionTitle(title: String) {
 }
 
 @Composable
-private fun EventHighlightsCarousel() {
+private fun EventHighlightsCarousel(events: List<Event>) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(3) { index ->
+        items(events.size) { index ->
+            val event = events[index]
             HighlightCard(
-                tag = if (index == 0) "Technology" else if (index == 1) "Cultural" else "Sports",
-                title = if (index == 0) "Tech Innovation Summit 2026"
-                else if (index == 1) "Cultural Night 2026"
-                else "Sports Day Championship",
-                date = if (index == 0) "Feb 15, 2026" else if (index == 1) "Feb 25, 2026" else "Feb 20, 2026",
-                venue = if (index == 0) "Main Auditorium" else if (index == 1) "Open Theatre" else "Sports Complex"
+                tag = event.category.name,
+                title = event.title,
+                date = event.date,
+                venue = event.venue
             )
         }
     }
@@ -260,7 +267,8 @@ private fun QuickAccessGrid(
     onAnnouncements: () -> Unit,
     activeEvents: Int,
     totalPhotos: Int,
-    savedItems: Int
+    savedItems: Int,
+    announcementsCount: Int
 ) {
     Column(Modifier.padding(horizontal = 18.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -293,7 +301,7 @@ private fun QuickAccessGrid(
             )
             QuickTile(
                 title = "Announcements",
-                subtitle = "5 new updates",
+                subtitle = "$announcementsCount new updates",
                 brush = Brush.linearGradient(listOf(Color(0xFF334155), Color(0xFF475569))),
                 icon = Icons.Outlined.Campaign,
                 onClick = onAnnouncements,
@@ -343,7 +351,7 @@ private fun QuickTile(
 }
 
 @Composable
-private fun TrendingNowCard() {
+private fun TrendingNowCard(trendingEvents: List<Event>) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -354,9 +362,9 @@ private fun TrendingNowCard() {
         Column(Modifier.padding(14.dp)) {
             Text("Trending Now", fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(10.dp))
-            TrendingItem("Student Council Elections 2026")
-            TrendingItem("New Library Resources Available")
-            TrendingItem("Campus WiFi Upgrade Complete")
+            trendingEvents.forEach { event ->
+                TrendingItem(event.title)
+            }
         }
     }
 }

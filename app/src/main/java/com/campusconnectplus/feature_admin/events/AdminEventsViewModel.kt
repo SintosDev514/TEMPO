@@ -37,8 +37,13 @@ class AdminEventsViewModel @Inject constructor(
 
     fun upsert(event: Event) {
         viewModelScope.launch {
-            repo.upsert(event)
-            _snackbarMessage.value = if (event.id == 0L) "Event created" else "Event updated"
+            try {
+                repo.upsert(event)
+                _snackbarMessage.value = if (event.id.isEmpty()) "Event created successfully" else "Event updated successfully"
+            } catch (e: Exception) {
+                _snackbarMessage.value = "Failed to save: ${e.localizedMessage ?: "Unknown error"}"
+                e.printStackTrace()
+            }
         }
     }
 }

@@ -100,6 +100,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     StudentHomeScreen(
                                         homeStats = homeVm.homeStats,
+                                        events = homeVm.events,
                                         onQuickNavigateEvents = { nav.navigate(StudentTab.Events.route) },
                                         onQuickNavigateMedia = { nav.navigate(StudentTab.Media.route) },
                                         onQuickNavigateSaved = { nav.navigate(StudentTab.Saved.route) },

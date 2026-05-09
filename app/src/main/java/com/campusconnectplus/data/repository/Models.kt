@@ -10,7 +10,7 @@ enum class AnnouncementStatus { ACTIVE, ARCHIVED }
 enum class UserRole { STUDENT, ADMIN, ORGANIZER, MEDIA_TEAM }
 
 data class Event(
-    val id: Long = 0L,
+    val id: String = "",
     val title: String,
     val date: String,   
     val venue: String,
@@ -20,8 +20,8 @@ data class Event(
 )
 
 data class Media(
-    val id: Long = 0L,
-    val eventId: Long,
+    val id: String = "",
+    val eventId: String,
     val url: String,
     val type: MediaType,
 
@@ -38,7 +38,7 @@ data class Media(
 )
 
 data class Announcement(
-    val id: Long = 0L,
+    val id: String = "",
     val title: String,
 
     // your fake repo uses "content" (not "message")
@@ -53,7 +53,7 @@ data class Announcement(
 )
 
 data class User(
-    val id: Long = 0L,
+    val id: String = "",
     val name: String,
     val email: String,
     val role: UserRole,

@@ -15,25 +15,25 @@ class RoomFavoriteRepository(
         const val TYPE_MEDIA = "MEDIA"
     }
 
-    override fun observeFavoriteEventIds(): Flow<Set<Long>> =
+    override fun observeFavoriteEventIds(): Flow<Set<String>> =
         dao.observeByType(TYPE_EVENT).map { list -> list.map { it.refId }.toSet() }
 
-    override fun observeFavoriteMediaIds(): Flow<Set<Long>> =
+    override fun observeFavoriteMediaIds(): Flow<Set<String>> =
         dao.observeByType(TYPE_MEDIA).map { list -> list.map { it.refId }.toSet() }
 
-    override suspend fun isEventFavorite(eventId: Long): Boolean =
+    override suspend fun isEventFavorite(eventId: String): Boolean =
         dao.getOne(TYPE_EVENT, eventId) != null
 
-    override suspend fun isMediaFavorite(mediaId: Long): Boolean =
+    override suspend fun isMediaFavorite(mediaId: String): Boolean =
         dao.getOne(TYPE_MEDIA, mediaId) != null
 
-    override suspend fun toggleEvent(eventId: Long) {
+    override suspend fun toggleEvent(eventId: String) {
         val exists = dao.getOne(TYPE_EVENT, eventId)
         if (exists != null) dao.delete(TYPE_EVENT, eventId)
         else dao.insert(FavoriteEntity(type = TYPE_EVENT, refId = eventId))
     }
 
-    override suspend fun toggleMedia(mediaId: Long) {
+    override suspend fun toggleMedia(mediaId: String) {
         val exists = dao.getOne(TYPE_MEDIA, mediaId)
         if (exists != null) dao.delete(TYPE_MEDIA, mediaId)
         else dao.insert(FavoriteEntity(type = TYPE_MEDIA, refId = mediaId))

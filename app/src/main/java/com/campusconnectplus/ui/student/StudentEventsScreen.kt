@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.campusconnectplus.core.ui.util.UiState
 import com.campusconnectplus.data.repository.EventCategory
 import com.campusconnectplus.feature_student.events.StudentEventsViewModel
@@ -231,6 +233,31 @@ fun StudentEventsScreen(vm: StudentEventsViewModel) {
                     Text("Venue: ${event.venue}", style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(12.dp))
                     Text(event.description, style = MaterialTheme.typography.bodyLarge)
+
+                    // Event Media Section
+                    val eventMedia by vm.getMediaForEvent(event.id).collectAsState(initial = emptyList<com.campusconnectplus.data.repository.Media>())
+                    if (eventMedia.isNotEmpty()) {
+                        Spacer(Modifier.height(16.dp))
+                        Text("Event Media", style = MaterialTheme.typography.titleSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        androidx.compose.foundation.lazy.LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(eventMedia) { media ->
+                                Card(
+                                    modifier = Modifier.size(100.dp),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    AsyncImage(
+                                        model = media.url,
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             },
             confirmButton = {

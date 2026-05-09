@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import com.campusconnectplus.core.ui.components.VideoPlayer
 import com.campusconnectplus.data.repository.MediaType
@@ -30,12 +32,18 @@ fun StudentMediaScreen(vm: StudentMediaViewModel) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("All") }
     var selectedMedia by remember { mutableStateOf<com.campusconnectplus.data.repository.Media?>(null) }
-    val filters = listOf("All", "Events", "Campus Life", "Sports")
+    val filters = listOf("All", "Images", "Videos", "Saved")
 
-    val filteredMedia = remember(media, searchQuery) {
+    val filteredMedia = remember(media, searchQuery, selectedFilter, favIds) {
         media.filter {
-            searchQuery.isBlank() || it.title.contains(searchQuery, ignoreCase = true) ||
-                it.fileName.contains(searchQuery, ignoreCase = true)
+            (searchQuery.isBlank() || it.title.contains(searchQuery, ignoreCase = true) ||
+                it.fileName.contains(searchQuery, ignoreCase = true)) &&
+            when (selectedFilter) {
+                "Images" -> it.type == MediaType.IMAGE
+                "Videos" -> it.type == MediaType.VIDEO
+                "Saved" -> favIds.contains(it.id)
+                else -> true
+            }
         }
     }
 
@@ -114,13 +122,29 @@ fun StudentMediaScreen(vm: StudentMediaViewModel) {
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                         ) {
+                            AsyncImage(
+                                model = item.url,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color.LightGray),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(item.title.ifEmpty { item.fileName }, style = MaterialTheme.typography.titleMedium)
+                                Text(item.title.ifEmpty { item.fileName }, style = MaterialTheme.typography.titleMedium, maxLines = 1)
                                 Spacer(Modifier.height(4.dp))
-                                Text(item.type.name, style = MaterialTheme.typography.bodyMedium)
-                                if (item.date.isNotBlank()) Text(item.date, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    text = "${item.type.name} • ${item.sizeMb}MB",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (item.date.isNotBlank()) {
+                                    Text(item.date, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                                }
                             }
                             IconButton(onClick = { vm.toggleFavorite(item.id) }) {
                                 Icon(

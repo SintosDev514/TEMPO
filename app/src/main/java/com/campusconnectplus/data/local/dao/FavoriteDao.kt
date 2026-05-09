@@ -14,13 +14,13 @@ interface FavoriteDao {
     fun observeByType(type: String): Flow<List<FavoriteEntity>>
 
     @Query("SELECT * FROM favorites WHERE type = :type AND refId = :refId LIMIT 1")
-    suspend fun getOne(type: String, refId: Long): FavoriteEntity?
+    suspend fun getOne(type: String, refId: String): FavoriteEntity?
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(entity: FavoriteEntity)
 
     @Query("DELETE FROM favorites WHERE type = :type AND refId = :refId")
-    suspend fun delete(type: String, refId: Long)
+    suspend fun delete(type: String, refId: String)
 
     @Query("DELETE FROM favorites")
     suspend fun clearAll()

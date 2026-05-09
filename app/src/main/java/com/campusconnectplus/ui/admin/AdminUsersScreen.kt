@@ -38,7 +38,7 @@ fun AdminUsersScreen(vm: AdminUsersViewModel) {
     val users by vm.users.collectAsState()
     var query by remember { mutableStateOf("") }
     var showCreateUser by remember { mutableStateOf(false) }
-    var userToDelete by remember { mutableStateOf<Pair<Long, String>?>(null) }
+    var userToDelete by remember { mutableStateOf<Pair<String, String>?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 

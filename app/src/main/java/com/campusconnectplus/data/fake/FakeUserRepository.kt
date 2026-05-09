@@ -5,12 +5,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.UUID
 
 class FakeUserRepository : UserRepository {
     private val mutex = Mutex()
     private val users = MutableStateFlow(
         listOf(
-            User(id = 1L, name = "John Doe", email = "john.doe@campus.edu", role = UserRole.ADMIN, active = true)
+            User(id = "1", name = "John Doe", email = "john.doe@campus.edu", role = UserRole.ADMIN, active = true)
         )
     )
 
@@ -19,28 +20,28 @@ class FakeUserRepository : UserRepository {
     override suspend fun upsert(user: User) {
         mutex.withLock {
             val list = users.value.toMutableList()
-            val idx = list.indexOfFirst { it.id == user.id && user.id != 0L }
+            val idx = list.indexOfFirst { it.id == user.id && user.id.isNotEmpty() }
             if (idx >= 0) list[idx] = user else {
-                val newId = (list.maxOfOrNull { it.id } ?: 0L) + 1
+                val newId = UUID.randomUUID().toString()
                 list.add(user.copy(id = newId))
             }
             users.value = list
         }
     }
 
-    override suspend fun setRole(userId: Long, role: UserRole) {
+    override suspend fun setRole(userId: String, role: UserRole) {
         mutex.withLock {
             users.value = users.value.map { if (it.id == userId) it.copy(role = role) else it }
         }
     }
 
-    override suspend fun setActive(userId: Long, active: Boolean) {
+    override suspend fun setActive(userId: String, active: Boolean) {
         mutex.withLock {
             users.value = users.value.map { if (it.id == userId) it.copy(active = active) else it }
         }
     }
 
-    override suspend fun delete(id: Long) {
+    override suspend fun delete(id: String) {
         mutex.withLock {
             users.value = users.value.filterNot { it.id == id }
         }

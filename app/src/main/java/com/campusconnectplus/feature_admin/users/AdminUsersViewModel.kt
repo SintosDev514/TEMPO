@@ -53,7 +53,7 @@ class AdminUsersViewModel @Inject constructor(
         return authRepo.signUp(role, name, email, password)
     }
 
-    fun setRole(userId: Long, roleLabel: String) {
+    fun setRole(userId: String, roleLabel: String) {
         val role = when (roleLabel) {
             "Admin" -> UserRole.ADMIN
             "Media Team" -> UserRole.MEDIA_TEAM
@@ -63,7 +63,7 @@ class AdminUsersViewModel @Inject constructor(
         viewModelScope.launch { repo.setRole(userId, role) }
     }
 
-    fun toggleActive(userId: Long) {
+    fun toggleActive(userId: String) {
         viewModelScope.launch {
             val user = users.value.find { it.id == userId }
             user?.let { repo.setActive(userId, !it.active) }
@@ -74,7 +74,7 @@ class AdminUsersViewModel @Inject constructor(
         viewModelScope.launch { repo.upsert(user) }
     }
 
-    fun delete(id: Long) {
+    fun delete(id: String) {
         viewModelScope.launch { repo.delete(id) }
     }
 }

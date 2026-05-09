@@ -1,12 +1,15 @@
 package com.campusconnectplus.core.di
 
-import com.campusconnectplus.data.local.dao.*
-import com.campusconnectplus.data.local.repository.*
+import com.campusconnectplus.data.remote.repository.*
 import com.campusconnectplus.data.repository.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.storage.Storage
 import javax.inject.Singleton
 
 @Module
@@ -15,26 +18,42 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideEventRepository(dao: EventDao): EventRepository = RoomEventRepository(dao)
+    fun provideEventRepository(
+        postgrest: Postgrest,
+        realtime: Realtime
+    ): EventRepository = SupabaseEventRepository(postgrest, realtime)
 
     @Provides
     @Singleton
-    fun provideMediaRepository(dao: MediaDao): MediaRepository = RoomMediaRepository(dao)
+    fun provideMediaRepository(
+        postgrest: Postgrest,
+        realtime: Realtime,
+        storage: Storage
+    ): MediaRepository = SupabaseMediaRepository(postgrest, realtime, storage)
 
     @Provides
     @Singleton
-    fun provideAnnouncementRepository(dao: AnnouncementDao): AnnouncementRepository = RoomAnnouncementRepository(dao)
+    fun provideAnnouncementRepository(
+        postgrest: Postgrest,
+        realtime: Realtime
+    ): AnnouncementRepository = SupabaseAnnouncementRepository(postgrest, realtime)
 
     @Provides
     @Singleton
-    fun provideUserRepository(dao: UserDao): UserRepository = RoomUserRepository(dao)
+    fun provideUserRepository(
+        postgrest: Postgrest,
+        realtime: Realtime
+    ): UserRepository = SupabaseUserRepository(postgrest, realtime)
 
     @Provides
     @Singleton
-    fun provideFavoriteRepository(dao: FavoriteDao): FavoriteRepository = RoomFavoriteRepository(dao)
+    fun provideFavoriteRepository(dao: com.campusconnectplus.data.local.dao.FavoriteDao): FavoriteRepository = 
+        com.campusconnectplus.data.local.repository.RoomFavoriteRepository(dao)
 
     @Provides
     @Singleton
-    fun provideAuthRepository(userDao: UserDao, userRepository: UserRepository): AuthRepository = 
-        RoomAuthRepository(userDao, userRepository)
+    fun provideAuthRepository(
+        auth: Auth,
+        postgrest: Postgrest
+    ): AuthRepository = SupabaseAuthRepository(auth, postgrest)
 }

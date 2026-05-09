@@ -34,7 +34,7 @@ class RoomAuthRepository(
             return AuthResult.Error("An account with this email already exists.")
         val now = System.currentTimeMillis()
         val user = User(
-            id = now,
+            id = java.util.UUID.randomUUID().toString(),
             name = name.trim(),
             email = trimmedEmail,
             role = role,

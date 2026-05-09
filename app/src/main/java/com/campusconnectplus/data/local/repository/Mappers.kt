@@ -5,7 +5,7 @@ import com.campusconnectplus.data.repository.*
 
 fun EventEntity.toModel(): Event =
     Event(
-        id = id.toLongOrNull() ?: 0L,
+        id = id,
         title = title,
         date = date,
         venue = venue,
@@ -16,7 +16,7 @@ fun EventEntity.toModel(): Event =
 
 fun Event.toEntity(): EventEntity =
     EventEntity(
-        id = id.toString(),
+        id = id,
         title = title,
         date = date,
         venue = venue,
@@ -27,8 +27,8 @@ fun Event.toEntity(): EventEntity =
 
 fun MediaEntity.toModel(): Media =
     Media(
-        id = id.toLongOrNull() ?: 0L,
-        eventId = eventId.toLongOrNull() ?: 0L,
+        id = id,
+        eventId = eventId,
         url = url,
         type = MediaType.valueOf(type),
         title = title ?: "",
@@ -38,8 +38,8 @@ fun MediaEntity.toModel(): Media =
 
 fun Media.toEntity(): MediaEntity =
     MediaEntity(
-        id = id.toString(),
-        eventId = eventId.toString(),
+        id = id,
+        eventId = eventId,
         url = url,
         type = type.name,
         title = title,
@@ -49,7 +49,7 @@ fun Media.toEntity(): MediaEntity =
 
 fun AnnouncementEntity.toModel(): Announcement =
     Announcement(
-        id = id.toLongOrNull() ?: 0L,
+        id = id,
         title = title,
         content = message,
         createdAt = createdAt,
@@ -58,7 +58,7 @@ fun AnnouncementEntity.toModel(): Announcement =
 
 fun Announcement.toEntity(): AnnouncementEntity =
     AnnouncementEntity(
-        id = id.toString(),
+        id = id,
         title = title,
         message = content,
         createdAt = createdAt,
@@ -67,7 +67,7 @@ fun Announcement.toEntity(): AnnouncementEntity =
 
 fun UserEntity.toModel(): User =
     User(
-        id = id.toLongOrNull() ?: 0L,
+        id = id,
         name = name,
         email = email,
         role = UserRole.valueOf(role),
@@ -78,7 +78,7 @@ fun UserEntity.toModel(): User =
 
 fun User.toEntity(): UserEntity =
     UserEntity(
-        id = id.toString(),
+        id = id,
         name = name,
         email = email,
         role = role.name,

@@ -36,11 +36,11 @@ class StudentSavedViewModel @Inject constructor(
             media.filter { it.id in ids }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    fun removeEvent(eventId: Long) {
+    fun removeEvent(eventId: String) {
         viewModelScope.launch { favoriteRepo.toggleEvent(eventId) }
     }
 
-    fun removeMedia(mediaId: Long) {
+    fun removeMedia(mediaId: String) {
         viewModelScope.launch { favoriteRepo.toggleMedia(mediaId) }
     }
 }

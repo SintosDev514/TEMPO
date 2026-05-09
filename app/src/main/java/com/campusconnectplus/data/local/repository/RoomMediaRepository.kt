@@ -23,4 +23,8 @@ class RoomMediaRepository(
     override suspend fun delete(mediaId: String) {
         dao.delete(mediaId)
     }
+
+    override suspend fun uploadFile(bucket: String, path: String, byteArray: ByteArray): String {
+        return "" // Not supported in Room
+    }
 }
