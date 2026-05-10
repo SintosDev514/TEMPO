@@ -1,12 +1,18 @@
 package com.campusconnectplus.ui.student
 
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.WifiOff
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.PhotoLibrary
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,7 +21,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import com.campusconnectplus.core.ui.components.MediaDetailViewer
+import com.campusconnectplus.core.ui.components.MediaGridItem
 import com.campusconnectplus.core.ui.components.VideoPlayer
 import com.campusconnectplus.data.repository.MediaType
 import com.campusconnectplus.feature_student.saved.StudentSavedViewModel
@@ -63,7 +70,7 @@ fun StudentSavedScreen(vm: StudentSavedViewModel) {
                     )
                 }
                 Icon(
-                    imageVector = Icons.Outlined.WifiOff,
+                    imageVector = Icons.Filled.WifiOff,
                     contentDescription = "Offline",
                     tint = Color.White
                 )
@@ -128,17 +135,32 @@ fun StudentSavedScreen(vm: StudentSavedViewModel) {
         ) {
             Spacer(Modifier.height(8.dp))
 
-            TabRow(selectedTabIndex = tabIndex) {
+            TabRow(
+                selectedTabIndex = tabIndex,
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.primary,
+                divider = {}
+            ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
                         selected = tabIndex == index,
                         onClick = { tabIndex = index },
-                        text = { Text(title) }
+                        text = { 
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    if (index == 0) Icons.Outlined.Event else Icons.Outlined.PhotoLibrary,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(title)
+                            }
+                        }
                     )
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
             Column(Modifier.weight(1f)) {
                 when (tabIndex) {
@@ -148,12 +170,16 @@ fun StudentSavedScreen(vm: StudentSavedViewModel) {
                         } else {
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
+                                contentPadding = PaddingValues(
+                                    top = 4.dp,
+                                    bottom = 120.dp
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(20.dp)
+                            )
+                            {
                                 items(savedEvents, key = { it.id }) { event ->
-                                    SavedCard(
-                                        title = event.title,
-                                        subtitle = event.date,
+                                    EventSavedCard(
+                                        event = event,
                                         onClick = { selectedEvent = event },
                                         onRemove = { vm.removeEvent(event.id) }
                                     )
@@ -166,16 +192,18 @@ fun StudentSavedScreen(vm: StudentSavedViewModel) {
                         if (savedMedia.isEmpty()) {
                             EmptyState("No saved media yet.")
                         } else {
-                            LazyColumn(
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
                                 modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 items(savedMedia, key = { it.id }) { media ->
-                                    SavedCard(
-                                        title = media.title.ifEmpty { media.fileName },
-                                        subtitle = media.type.name,
-                                        onClick = { selectedMedia = media },
-                                        onRemove = { vm.removeMedia(media.id) }
+                                    MediaGridItem(
+                                        item = media,
+                                        isSaved = true,
+                                        onToggleFavorite = { vm.removeMedia(media.id) },
+                                        onClick = { selectedMedia = media }
                                     )
                                 }
                             }
@@ -207,71 +235,217 @@ fun StudentSavedScreen(vm: StudentSavedViewModel) {
     }
 
     selectedMedia?.let { item ->
-        AlertDialog(
-            onDismissRequest = { selectedMedia = null },
-            title = { Text(item.title.ifEmpty { item.fileName }, fontWeight = FontWeight.Bold) },
-            text = {
-                Column {
-                    Text("Type: ${item.type.name}", style = MaterialTheme.typography.bodyMedium)
-                    if (item.date.isNotBlank()) Text("Date: ${item.date}", style = MaterialTheme.typography.bodyMedium)
-                    if (item.sizeMb > 0) Text("Size: ${item.sizeMb} MB", style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(12.dp))
-
-                    if (item.url.isNotBlank()) {
-                        if (item.type == MediaType.VIDEO) {
-                            VideoPlayer(url = item.url)
-                        } else {
-                            AsyncImage(
-                                model = item.url,
-                                contentDescription = item.title,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp)
-                                    .background(Color.LightGray, RoundedCornerShape(8.dp)),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                            )
-                        }
-                        Spacer(Modifier.height(8.dp))
-                    }
-
-                    Text("Media URL: ${item.url}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { selectedMedia = null }) {
-                    Text("Close")
-                }
-            }
+        MediaDetailViewer(
+            item = item,
+            onDownload = { vm.downloadMedia(it) },
+            onDismiss = { selectedMedia = null }
         )
     }
 }
 
 @Composable
-private fun SavedCard(
-    title: String,
-    subtitle: String,
+private fun EventSavedCard(
+    event: com.campusconnectplus.data.repository.Event,
     onClick: () -> Unit,
     onRemove: () -> Unit
 ) {
-    Card(onClick = onClick) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(4.dp))
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium)
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column {
+
+            // Top Banner / Thumbnail Area
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(170.dp)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                Color(0xFF7C3AED),
+                                Color(0xFF8B5CF6),
+                                Color(0xFFA78BFA)
+                            )
+                        )
+                    )
+            ) {
+
+                // Fake Event Cover Design
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(18.dp)
+                ) {
+
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = Color.White.copy(alpha = 0.18f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(
+                                horizontal = 12.dp,
+                                vertical = 6.dp
+                            ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Event,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            Text(
+                                text = "Saved Event",
+                                color = Color.White,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = event.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2
+                    )
+                }
+
+                // Bookmark Floating Button
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(14.dp),
+                    shape = RoundedCornerShape(50),
+                    color = Color.White.copy(alpha = 0.2f)
+                ) {
+                    IconButton(onClick = onRemove) {
+                        Icon(
+                            imageVector = Icons.Default.Bookmark,
+                            contentDescription = "Remove Saved",
+                            tint = Color.White
+                        )
+                    }
+                }
             }
-            TextButton(onClick = onRemove) {
-                Text("Remove")
+
+            // Content Area
+            Column(
+                modifier = Modifier.padding(18.dp)
+            ) {
+
+                // Date Chip
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = Color(0xFFF3F0FF)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(
+                            horizontal = 12.dp,
+                            vertical = 7.dp
+                        ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Outlined.Event,
+                            contentDescription = null,
+                            tint = Color(0xFF7C3AED),
+                            modifier = Modifier.size(16.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        Text(
+                            text = event.date,
+                            color = Color(0xFF7C3AED),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Venue
+                Text(
+                    text = event.venue,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Description
+                Text(
+                    text = event.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3
+                )
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Bottom Actions
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = Color(0xFFEDE9FE)
+                        ) {
+                            Text(
+                                text = "Offline Saved",
+                                modifier = Modifier.padding(
+                                    horizontal = 12.dp,
+                                    vertical = 6.dp
+                                ),
+                                color = Color(0xFF6D28D9),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    FilledTonalButton(
+                        onClick = onClick,
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text("View")
+                    }
+                }
             }
         }
     }
 }
+
 
 @Composable
 private fun EmptyState(message: String) {

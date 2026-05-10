@@ -2,6 +2,9 @@ package com.campusconnectplus.core.di
 
 import com.campusconnectplus.data.remote.repository.*
 import com.campusconnectplus.data.repository.*
+import com.campusconnectplus.data.repository.OfflineFirstAnnouncementRepository
+import com.campusconnectplus.data.repository.OfflineFirstEventRepository
+import com.campusconnectplus.data.repository.OfflineFirstMediaRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,23 +23,36 @@ object RepositoryModule {
     @Singleton
     fun provideEventRepository(
         postgrest: Postgrest,
-        realtime: Realtime
-    ): EventRepository = SupabaseEventRepository(postgrest, realtime)
+        realtime: Realtime,
+        dao: com.campusconnectplus.data.local.dao.EventDao
+    ): EventRepository {
+        val remote = SupabaseEventRepository(postgrest, realtime)
+        return OfflineFirstEventRepository(remote, dao)
+    }
 
     @Provides
     @Singleton
     fun provideMediaRepository(
         postgrest: Postgrest,
         realtime: Realtime,
-        storage: Storage
-    ): MediaRepository = SupabaseMediaRepository(postgrest, realtime, storage)
+        storage: Storage,
+        auth: Auth,
+        dao: com.campusconnectplus.data.local.dao.MediaDao
+    ): MediaRepository {
+        val remote = SupabaseMediaRepository(postgrest, realtime, storage, auth)
+        return OfflineFirstMediaRepository(remote, dao)
+    }
 
     @Provides
     @Singleton
     fun provideAnnouncementRepository(
         postgrest: Postgrest,
-        realtime: Realtime
-    ): AnnouncementRepository = SupabaseAnnouncementRepository(postgrest, realtime)
+        realtime: Realtime,
+        dao: com.campusconnectplus.data.local.dao.AnnouncementDao
+    ): AnnouncementRepository {
+        val remote = SupabaseAnnouncementRepository(postgrest, realtime)
+        return OfflineFirstAnnouncementRepository(remote, dao)
+    }
 
     @Provides
     @Singleton

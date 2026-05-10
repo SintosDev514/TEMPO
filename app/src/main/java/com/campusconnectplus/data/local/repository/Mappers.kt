@@ -32,7 +32,12 @@ fun MediaEntity.toModel(): Media =
         url = url,
         type = MediaType.valueOf(type),
         title = title ?: "",
-        fileName = description ?: "",
+        fileName = fileName ?: "",
+        date = date ?: "",
+        sizeMb = sizeMb,
+        duration = duration ?: "",
+        saves = saves,
+        coverUrl = coverUrl ?: "",
         updatedAt = updatedAt
     )
 
@@ -43,7 +48,12 @@ fun Media.toEntity(): MediaEntity =
         url = url,
         type = type.name,
         title = title,
-        description = fileName,
+        fileName = fileName,
+        date = date,
+        sizeMb = sizeMb,
+        duration = duration,
+        saves = saves,
+        coverUrl = coverUrl,
         updatedAt = updatedAt
     )
 

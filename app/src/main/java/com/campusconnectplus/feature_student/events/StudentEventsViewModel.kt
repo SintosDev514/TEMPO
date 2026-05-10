@@ -1,5 +1,10 @@
 package com.campusconnectplus.feature_student.events
 
+import android.app.DownloadManager
+import android.content.Context
+import android.net.Uri
+import android.os.Environment
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.campusconnectplus.core.ui.util.UiState
@@ -9,6 +14,7 @@ import com.campusconnectplus.data.repository.FavoriteRepository
 import com.campusconnectplus.data.repository.Media
 import com.campusconnectplus.data.repository.MediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +28,8 @@ import javax.inject.Inject
 class StudentEventsViewModel @Inject constructor(
     private val eventRepo: EventRepository,
     private val favoriteRepo: FavoriteRepository,
-    private val mediaRepo: MediaRepository
+    private val mediaRepo: MediaRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     val eventsState: StateFlow<UiState<List<Event>>> = kotlinx.coroutines.flow.flow {
@@ -66,5 +73,24 @@ class StudentEventsViewModel @Inject constructor(
 
     fun getMediaForEvent(eventId: String): kotlinx.coroutines.flow.Flow<List<Media>> {
         return mediaRepo.ofEvent(eventId)
+    }
+
+    fun downloadMedia(item: Media) {
+        try {
+            val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val uri = Uri.parse(item.url)
+            val request = DownloadManager.Request(uri)
+                .setTitle(item.title.ifBlank { item.fileName })
+                .setDescription("Downloading event media")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, item.fileName)
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(true)
+
+            downloadManager.enqueue(request)
+            Toast.makeText(context, "Download started...", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 }

@@ -8,6 +8,7 @@ import com.campusconnectplus.data.repository.UserRole
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.Postgrest
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +28,6 @@ class SupabaseAuthRepository @Inject constructor(
             }
             val session = auth.currentSessionOrNull()
             if (session != null) {
-                // Try to fetch custom role and name from public.users table
                 val remoteUser = try {
                     postgrest["users"].select {
                         filter { eq("id", session.user?.id ?: "") }
@@ -40,7 +40,7 @@ class SupabaseAuthRepository @Inject constructor(
                     email = session.user?.email ?: email,
                     role = when {
                         (session.user?.email ?: email) == Constants.DEFAULT_ADMIN_EMAIL -> UserRole.ADMIN
-                        remoteUser != null -> try { UserRole.valueOf(remoteUser.role) } catch (e: Exception) { UserRole.STUDENT }
+                        remoteUser != null -> try { UserRole.valueOf(remoteUser.role.uppercase()) } catch (e: Exception) { UserRole.STUDENT }
                         else -> UserRole.STUDENT
                     },
                     active = remoteUser?.active ?: true,
@@ -68,7 +68,6 @@ class SupabaseAuthRepository @Inject constructor(
             
             val user = auth.currentSessionOrNull()?.user
             if (user != null) {
-                // Create profile in public.users table
                 try {
                     postgrest["users"].upsert(RemoteUser(
                         id = user.id,

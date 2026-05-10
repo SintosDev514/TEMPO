@@ -161,7 +161,7 @@ fun AdminEventsScreen(vm: AdminEventsViewModel) {
                                             }) {
                                                 Icon(Icons.Outlined.Edit, contentDescription = null)
                                             }
-                                            IconButton(onClick = { vm.delete(e.id.toString()) }) {
+                                            IconButton(onClick = { vm.delete(e.id) }) {
                                                 Icon(
                                                     Icons.Outlined.Delete,
                                                     contentDescription = null,

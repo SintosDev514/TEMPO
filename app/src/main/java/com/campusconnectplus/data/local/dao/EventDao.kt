@@ -15,6 +15,26 @@ interface EventDao {
     @Upsert
     suspend fun upsert(entity: EventEntity)
 
+    @Upsert
+    suspend fun upsertAll(entities: List<EventEntity>)
+
     @Query("DELETE FROM events WHERE id = :id")
     suspend fun delete(id: String)
+
+    @Query("DELETE FROM events WHERE id NOT IN (:ids)")
+    suspend fun deleteExcept(ids: List<String>)
+
+    @Transaction
+    suspend fun sync(entities: List<EventEntity>) {
+        upsertAll(entities)
+        val ids = entities.map { it.id }
+        if (ids.isEmpty()) {
+            deleteAll()
+        } else {
+            deleteExcept(ids)
+        }
+    }
+
+    @Query("DELETE FROM events")
+    suspend fun deleteAll()
 }

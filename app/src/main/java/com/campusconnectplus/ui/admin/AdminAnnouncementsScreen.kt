@@ -80,7 +80,7 @@ fun AdminAnnouncementsScreen(vm: AdminAnnouncementsViewModel) {
                                         }
                                     }
                                     IconButton(onClick = { announcementToEdit = a }) { Icon(Icons.Outlined.Edit, null) }
-                                    IconButton(onClick = { vm.delete(a.id.toString()) }) { Icon(Icons.Outlined.Delete, null, tint = Color(0xFFEF4444)) }
+                                    IconButton(onClick = { vm.delete(a.id) }) { Icon(Icons.Outlined.Delete, null, tint = Color(0xFFEF4444)) }
                                 }
                             }
                         }

@@ -66,6 +66,11 @@ dependencies {
     implementation("androidx.room:room-ktx:2.8.1")
     ksp("androidx.room:room-compiler:2.8.1")
 
+    // WorkManager for Background Sync
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
+
     // Coil for Image Caching (Offline Readiness)
     implementation("io.coil-kt:coil-compose:2.6.0")
 

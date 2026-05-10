@@ -39,13 +39,11 @@ fun VideoPlayer(url: String, modifier: Modifier = Modifier) {
                 useController = true
                 layoutParams = android.view.ViewGroup.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT
                 )
             }
         },
         modifier = modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .background(Color.Black, RoundedCornerShape(8.dp))
+            .background(Color.Black)
     )
 }

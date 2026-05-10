@@ -10,6 +10,11 @@ data class MediaEntity(
     val url: String,
     val type: String,
     val title: String?,
-    val description: String?,
+    val fileName: String?,
+    val date: String?,
+    val sizeMb: Int,
+    val duration: String?,
+    val saves: Int,
+    val coverUrl: String?,
     val updatedAt: Long
 )
