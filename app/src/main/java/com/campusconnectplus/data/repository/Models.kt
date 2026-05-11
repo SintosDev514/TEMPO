@@ -16,6 +16,7 @@ data class Event(
     val venue: String,
     val description: String,
     val category: EventCategory,
+    val imageUrl: String? = null,
     val updatedAt: Long = System.currentTimeMillis()
 )
 

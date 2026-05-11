@@ -231,6 +231,20 @@ fun StudentEventsScreen(vm: StudentEventsViewModel) {
                                                         )
                                                     )
                                             ) {
+                                                event.imageUrl?.let { url ->
+                                                    AsyncImage(
+                                                        model = url,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.fillMaxSize(),
+                                                        contentScale = ContentScale.Crop
+                                                    )
+                                                    // Dark overlay for text readability
+                                                    Box(
+                                                        Modifier
+                                                            .fillMaxSize()
+                                                            .background(Color.Black.copy(alpha = 0.3f))
+                                                    )
+                                                }
 
                                                 // TOP BADGES
                                                 Row(

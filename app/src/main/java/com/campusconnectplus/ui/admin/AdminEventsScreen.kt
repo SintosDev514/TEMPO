@@ -54,6 +54,7 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -188,13 +189,14 @@ fun AdminEventsScreen(vm: AdminEventsViewModel) {
                 if (showCreate) {
                     CreateEventDialog(
                         onDismiss = { showCreate = false },
-                        onCreate = { title, date, time, location, category, desc ->
+                        onCreate = { title, date, time, location, category, desc, imageUrl ->
                             vm.upsert(
                                 com.campusconnectplus.data.repository.Event(
                                     title = title,
                                     date = if (time.isNotBlank()) "$date $time" else date,
                                     venue = location,
                                     description = desc,
+                                    imageUrl = if (imageUrl.isBlank()) null else imageUrl,
                                     category = when (category) {
                                         "Cultural" -> com.campusconnectplus.data.repository.EventCategory.CULTURAL
                                         "Sports" -> com.campusconnectplus.data.repository.EventCategory.SPORTS
@@ -225,12 +227,13 @@ fun AdminEventsScreen(vm: AdminEventsViewModel) {
 @Composable
 private fun CreateEventDialog(
     onDismiss: () -> Unit,
-    onCreate: (String, String, String, String, String, String) -> Unit
+    onCreate: (String, String, String, String, String, String, String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("Academic") }
     var desc by remember { mutableStateOf("") }
+    var imageUrl by remember { mutableStateOf("") }
 
     var titleError by remember { mutableStateOf<String?>(null) }
     var dateError by remember { mutableStateOf<String?>(null) }
@@ -363,6 +366,15 @@ private fun CreateEventDialog(
                         colors = fieldColors
                     )
                     OutlinedTextField(
+                        value = imageUrl,
+                        onValueChange = { imageUrl = it },
+                        label = { Text("Image URL (Optional)") },
+                        leadingIcon = { Icon(Icons.Outlined.Image, contentDescription = null, Modifier.size(22.dp)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = fieldColors
+                    )
+                    OutlinedTextField(
                         value = desc,
                         onValueChange = { desc = it },
                         label = { Text("Description") },
@@ -391,7 +403,7 @@ private fun CreateEventDialog(
                     }
                     Spacer(Modifier.width(12.dp))
                     Button(
-                        onClick = { if (validate()) onCreate(title, dateText, timeText, location, category, desc) },
+                        onClick = { if (validate()) onCreate(title, dateText, timeText, location, category, desc, imageUrl) },
                         colors = ButtonDefaults.buttonColors(containerColor = AdminColors.Primary),
                         shape = RoundedCornerShape(10.dp),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
@@ -476,6 +488,7 @@ private fun EditEventDialog(
         )
     }
     var desc by remember(initial.id) { mutableStateOf(initial.description) }
+    var imageUrl by remember(initial.id) { mutableStateOf(initial.imageUrl ?: "") }
     var dateText by remember(initial.id) { mutableStateOf(initial.date) }
     var timeText by remember(initial.id) { mutableStateOf("") }
 
@@ -597,6 +610,15 @@ private fun EditEventDialog(
                         colors = fieldColors
                     )
                     OutlinedTextField(
+                        value = imageUrl,
+                        onValueChange = { imageUrl = it },
+                        label = { Text("Image URL (Optional)") },
+                        leadingIcon = { Icon(Icons.Outlined.Image, contentDescription = null, Modifier.size(22.dp)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = fieldColors
+                    )
+                    OutlinedTextField(
                         value = desc,
                         onValueChange = { desc = it },
                         label = { Text("Description") },
@@ -628,6 +650,7 @@ private fun EditEventDialog(
                                         date = if (timeText.isNotBlank()) "$dateText $timeText" else dateText,
                                         venue = location,
                                         description = desc,
+                                        imageUrl = if (imageUrl.isBlank()) null else imageUrl,
                                         category = when (category) {
                                             "Cultural" -> EventCategory.CULTURAL
                                             "Sports" -> EventCategory.SPORTS
