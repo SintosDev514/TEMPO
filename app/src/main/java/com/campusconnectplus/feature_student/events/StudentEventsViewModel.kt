@@ -13,6 +13,7 @@ import com.campusconnectplus.data.repository.EventRepository
 import com.campusconnectplus.data.repository.FavoriteRepository
 import com.campusconnectplus.data.repository.Media
 import com.campusconnectplus.data.repository.MediaRepository
+import com.campusconnectplus.core.network.NetworkMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,12 +31,18 @@ class StudentEventsViewModel @Inject constructor(
     private val eventRepo: EventRepository,
     private val favoriteRepo: FavoriteRepository,
     private val mediaRepo: MediaRepository,
+    networkMonitor: NetworkMonitor,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    val eventsState: StateFlow<UiState<List<Event>>> = kotlinx.coroutines.flow.flow {
-        emit(UiState.Loading)
-        eventRepo.observeEvents().collect { list -> emit(UiState.Success(list)) }
+    val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    val eventsState: StateFlow<UiState<List<Event>>> = combine(
+        eventRepo.observeEvents(),
+        isOnline
+    ) { events, _ ->
+        if (events.isEmpty()) UiState.Loading else UiState.Success(events)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),

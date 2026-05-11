@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.campusconnectplus.data.repository.FavoriteRepository
 import com.campusconnectplus.data.repository.Media
 import com.campusconnectplus.data.repository.MediaRepository
+import com.campusconnectplus.core.network.NetworkMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,8 +23,12 @@ import javax.inject.Inject
 class StudentMediaViewModel @Inject constructor(
     private val mediaRepo: MediaRepository,
     private val favoriteRepo: FavoriteRepository,
+    networkMonitor: NetworkMonitor,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
     val media = mediaRepo.observeMedia()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())

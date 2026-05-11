@@ -101,11 +101,13 @@ class MainActivity : ComponentActivity() {
                                     StudentHomeScreen(
                                         homeStats = homeVm.homeStats,
                                         events = homeVm.events,
+                                        isOnline = homeVm.isOnline,
                                         onQuickNavigateEvents = { nav.navigate(StudentTab.Events.route) },
                                         onQuickNavigateMedia = { nav.navigate(StudentTab.Media.route) },
                                         onQuickNavigateSaved = { nav.navigate(StudentTab.Saved.route) },
                                         onQuickNavigateAnnouncements = { nav.navigate(StudentTab.Announcements.route) },
-                                        onNavigateToAdmin = { nav.navigate("admin/login") }
+                                        onNavigateToAdmin = { nav.navigate("admin/login") },
+                                        getMediaForEvent = { homeVm.getMediaForEvent(it) }
                                     )
                                 }
                             }
@@ -292,33 +294,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        composable(AdminTab.Users.route) {
-                            val currentUser by authVm.currentUser.collectAsState()
-                            val allowedTabs = remember(currentUser?.role) { tabsForRole(currentUser?.role ?: UserRole.ADMIN) }
-                            LaunchedEffect(currentUser) {
-                                if (currentUser == null) {
-                                    nav.navigate("admin/login") { popUpTo(AdminTab.Users.route) { inclusive = true } }
-                                } else if (AdminTab.Users.route !in allowedTabs.map { it.route }) {
-                                    nav.navigate(allowedTabs.first().route) { popUpTo(AdminTab.Users.route) { inclusive = true } }
-                                }
-                            }
-                            if (currentUser != null && AdminTab.Users.route in allowedTabs.map { it.route }) {
-                                val adminUsersVm: com.campusconnectplus.feature_admin.users.AdminUsersViewModel = hiltViewModel()
-                                Box(Modifier.fillMaxSize()) {
-                                    AdminScaffold(
-                                        currentRoute = AdminTab.Users.route,
-                                        onNavigate = nav::navigate,
-                                        allowedTabs = allowedTabs
-                                    ) {
-                                        AdminUsersScreen(vm = adminUsersVm)
-                                    }
-                                }
-                            } else {
-                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    CircularProgressIndicator()
-                                }
-                            }
-                        }
 
                         composable(AdminTab.Settings.route) {
                             val currentUser by authVm.currentUser.collectAsState()

@@ -68,9 +68,9 @@ fun AdminMediaScreen(vm: AdminMediaViewModel) {
 
                     if (media.isEmpty()) {
                         EmptyAdminPanel(
-                            iconText = "🖼️",
+                            icon = Icons.Outlined.Upload,
                             title = "No media uploaded yet",
-                            hint = "Click “Create” to upload photos and videos from your device."
+                            hint = "Click “Create” to upload photos and videos to your campus gallery."
                         )
                     } else {
                         LazyColumn(

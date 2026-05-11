@@ -110,7 +110,7 @@ fun TopBar(title: String, subtitle: String, onPrimary: (() -> Unit)? = null) {
 }
 
 @Composable
-fun EmptyAdminPanel(iconText: String, title: String, hint: String) {
+fun EmptyAdminPanel(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, hint: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -119,7 +119,7 @@ fun EmptyAdminPanel(iconText: String, title: String, hint: String) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Surface(
                 modifier = Modifier.size(80.dp),
@@ -128,10 +128,15 @@ fun EmptyAdminPanel(iconText: String, title: String, hint: String) {
                 border = BorderStroke(1.dp, AdminColors.Border)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(iconText, fontSize = 32.sp)
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp),
+                        tint = AdminColors.Secondary.copy(alpha = 0.4f)
+                    )
                 }
             }
-            Text(title, fontWeight = FontWeight.Bold, color = AdminColors.Dark)
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AdminColors.Dark)
             Text(
                 hint,
                 color = AdminColors.Secondary,

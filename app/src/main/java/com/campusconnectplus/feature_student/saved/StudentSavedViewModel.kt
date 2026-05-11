@@ -52,6 +52,10 @@ class StudentSavedViewModel @Inject constructor(
         viewModelScope.launch { favoriteRepo.toggleMedia(mediaId) }
     }
 
+    fun getMediaForEvent(eventId: String): kotlinx.coroutines.flow.Flow<List<Media>> {
+        return mediaRepo.ofEvent(eventId)
+    }
+
     fun downloadMedia(item: Media) {
         try {
             val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager

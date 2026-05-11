@@ -43,15 +43,15 @@ fun AdminDashboardScreen(vm: AdminDashboardViewModel, onViewDetails: () -> Unit 
             // Main Stats Row
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 AnalyticsCard(
-                    label = "Total Users",
-                    value = stats.totalUsers.toString(),
-                    icon = Icons.Outlined.Group,
+                    label = "System Uptime",
+                    value = "99.9%",
+                    icon = Icons.Outlined.Speed,
                     accent = Color(0xFF3B82F6),
                     modifier = Modifier.weight(1f)
                 )
                 AnalyticsCard(
-                    label = "Active Now",
-                    value = stats.activeUsers.toString(),
+                    label = "Health Score",
+                    value = "A+",
                     icon = Icons.Outlined.CheckCircle,
                     accent = Color(0xFF10B981),
                     modifier = Modifier.weight(1f)

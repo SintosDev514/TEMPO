@@ -39,7 +39,6 @@ sealed class AdminTab(
     data object Events : AdminTab("admin/events", "Events", "Events", Icons.Outlined.Event)
     data object Media : AdminTab("admin/media", "Media", "Media", Icons.Outlined.Image)
     data object Announcements : AdminTab("admin/announcements", "Announcements", "News", Icons.Outlined.Campaign)
-    data object Users : AdminTab("admin/users", "Users", "Users", Icons.Outlined.Group)
     data object Settings : AdminTab("admin/settings", "Settings", "Settings", Icons.Outlined.Settings)
 }
 
@@ -48,7 +47,6 @@ val AdminTabs = listOf(
     AdminTab.Events,
     AdminTab.Media,
     AdminTab.Announcements,
-    AdminTab.Users,
     AdminTab.Settings
 )
 

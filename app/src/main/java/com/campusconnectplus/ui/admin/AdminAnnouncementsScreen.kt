@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.MenuAnchorType
@@ -53,9 +54,9 @@ fun AdminAnnouncementsScreen(vm: AdminAnnouncementsViewModel) {
 
                 if (announcements.isEmpty()) {
                     EmptyAdminPanel(
-                        iconText = "📣",
+                        icon = Icons.Outlined.Campaign,
                         title = "No announcements created yet",
-                        hint = "Click “Create” to post your first announcement."
+                        hint = "Click “Create” to broadcast your first campus update."
                     )
                 } else {
                     LazyColumn(

@@ -122,9 +122,9 @@ fun AdminEventsScreen(vm: AdminEventsViewModel) {
 
                     if (events.isEmpty()) {
                         EmptyAdminPanel(
-                            iconText = "📅",
+                            icon = Icons.Outlined.Event,
                             title = "No events created yet",
-                            hint = "Click “Add” to create your first event."
+                            hint = "Click “Create” to start managing your campus events."
                         )
                     } else {
                         LazyColumn(
