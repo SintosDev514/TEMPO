@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.campusconnectplus"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.campusconnectplus"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
