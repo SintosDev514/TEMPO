@@ -59,7 +59,7 @@ class OfflineFirstAnnouncementRepository @Inject constructor(
     }
 
     override suspend fun sync() {
-        remote.observeAnnouncements().collectLatest { remoteList ->
+        remote.observeAnnouncements().take(1).collectLatest { remoteList ->
             local.sync(remoteList.map { it.toEntity() })
         }
     }

@@ -92,7 +92,7 @@ class OfflineFirstMediaRepository @Inject constructor(
     }
 
     override suspend fun sync() {
-        remote.observeMedia().collectLatest { remoteList ->
+        remote.observeMedia().take(1).collectLatest { remoteList ->
             local.sync(remoteList.map { it.toEntity() })
         }
     }

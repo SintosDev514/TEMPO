@@ -6,12 +6,11 @@ import com.campusconnectplus.data.repository.AnnouncementRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class RoomAnnouncementRepository(
-    private val dao: AnnouncementDao
-) : AnnouncementRepository {
-
+/**
+ * Local Room implementation of [AnnouncementRepository].
+ * This handles the persistence of announcements in th
     override fun observeAnnouncements(): Flow<List<Announcement>> =
-        dao.observeAll().map { it.map { a -> a.toModel() } }
+        dao.observeAll().map { list -> list.map { it.toModel() } }
 
     override suspend fun upsert(announcement: Announcement) {
         dao.upsert(announcement.toEntity())
@@ -22,6 +21,8 @@ class RoomAnnouncementRepository(
     }
 
     override suspend fun sync() {
-        // Implementation for sync with remote source
+        // Sync implementation for local repository if needed.
+        // Usually handled by the OfflineFirst wrapper which coordinates 
+        // between this local repository and a remote source.
     }
 }
