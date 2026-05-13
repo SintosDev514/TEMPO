@@ -23,4 +23,8 @@ class RoomEventRepository(
     override suspend fun delete(eventId: String) {
         dao.delete(eventId)
     }
+
+    override suspend fun sync() {
+        // Implementation for sync with remote source
+    }
 }

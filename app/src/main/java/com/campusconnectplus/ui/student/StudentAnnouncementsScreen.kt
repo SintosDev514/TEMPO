@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -45,35 +47,42 @@ private fun timeAgo(updatedAt: Long): String {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentAnnouncementsScreen(vm: StudentAnnouncementsViewModel) {
     val announcements by vm.announcements.collectAsState()
     val isOnline by vm.isOnline.collectAsState()
+    val refreshing by vm.isRefreshing.collectAsState()
     var selectedAnnouncement by remember { mutableStateOf<Announcement?>(null) }
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    Column(Modifier.fillMaxSize()) {
-        AnimatedVisibility(
-            visible = !isOnline,
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            Surface(
-                color = MaterialTheme.colorScheme.errorContainer,
-                modifier = Modifier.fillMaxWidth()
+    PullToRefreshBox(
+        isRefreshing = refreshing,
+        onRefresh = { vm.refresh() },
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            AnimatedVisibility(
+                visible = !isOnline,
+                enter = expandVertically(),
+                exit = shrinkVertically()
             ) {
-                Row(
-                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Outlined.CloudOff, null, tint = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Offline: Showing cached announcements", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                    Row(
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(Icons.Outlined.CloudOff, null, tint = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Offline: Showing cached announcements", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                    }
                 }
             }
-        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -133,6 +142,7 @@ fun StudentAnnouncementsScreen(vm: StudentAnnouncementsViewModel) {
                     AnnouncementCard(a, onClick = { selectedAnnouncement = a })
                 }
             }
+        }
         }
     }
 

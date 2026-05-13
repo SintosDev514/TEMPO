@@ -40,19 +40,15 @@ class SyncWorker @AssistedInject constructor(
     }
 
     private suspend fun syncEvents() {
-        // In a real app, we might have a specific 'sync' method that fetches and saves to local.
-        // For now, our repositories handle this in observeEvents, but we can trigger a manual fetch if needed.
-        // Since SupabaseEventRepository.observeEvents() fetches once then subscribes, 
-        // calling it and taking 1 would effectively sync.
-        // However, better would be to have a dedicated sync() function in the interface.
+        eventRepo.sync()
     }
 
     private suspend fun syncMedia() {
-        // Similar to syncEvents
+        mediaRepo.sync()
     }
 
     private suspend fun syncAnnouncements() {
-        // Similar to syncEvents
+        announcementRepo.sync()
     }
 
     companion object {

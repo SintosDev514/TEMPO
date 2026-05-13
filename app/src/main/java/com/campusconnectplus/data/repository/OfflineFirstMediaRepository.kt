@@ -15,6 +15,12 @@ class OfflineFirstMediaRepository @Inject constructor(
 ) : MediaRepository {
 
     override fun observeMedia(): Flow<List<Media>> = channelFlow {
+        val localJob = launch {
+            local.observeAll()
+                .map { list -> list.map { it.toModel() } }
+                .collect { send(it) }
+        }
+
         val syncJob = launch(Dispatchers.IO) {
             remote.observeMedia()
                 .retryWhen { _, attempt ->
@@ -28,14 +34,19 @@ class OfflineFirstMediaRepository @Inject constructor(
                 }
         }
 
-        local.observeAll()
-            .map { list -> list.map { it.toModel() } }
-            .collect { send(it) }
-
-        awaitClose { syncJob.cancel() }
+        awaitClose { 
+            localJob.cancel()
+            syncJob.cancel() 
+        }
     }
 
     override fun ofEvent(eventId: String): Flow<List<Media>> = channelFlow {
+        val localJob = launch {
+            local.observeForEvent(eventId)
+                .map { list -> list.map { it.toModel() } }
+                .collect { send(it) }
+        }
+
         val syncJob = launch(Dispatchers.IO) {
             remote.ofEvent(eventId)
                 .retryWhen { _, attempt ->
@@ -49,24 +60,40 @@ class OfflineFirstMediaRepository @Inject constructor(
                 }
         }
 
-        local.observeForEvent(eventId)
-            .map { list -> list.map { it.toModel() } }
-            .collect { send(it) }
-
-        awaitClose { syncJob.cancel() }
+        awaitClose { 
+            localJob.cancel()
+            syncJob.cancel() 
+        }
     }
 
     override suspend fun upsert(media: Media) {
-        remote.upsert(media)
+        // Save to local first for immediate UI update
         local.upsert(media.toEntity())
+        
+        // Then attempt remote sync
+        try {
+            remote.upsert(media)
+        } catch (e: Exception) {
+            println("Offline: Media sync will happen later. ${e.message}")
+        }
     }
 
     override suspend fun delete(mediaId: String) {
-        remote.delete(mediaId)
         local.delete(mediaId)
+        try {
+            remote.delete(mediaId)
+        } catch (e: Exception) {
+            println("Offline: Delete sync will happen later.")
+        }
     }
 
     override suspend fun uploadFile(bucket: String, path: String, byteArray: ByteArray): String {
         return remote.uploadFile(bucket, path, byteArray)
+    }
+
+    override suspend fun sync() {
+        remote.observeMedia().collectLatest { remoteList ->
+            local.sync(remoteList.map { it.toEntity() })
+        }
     }
 }

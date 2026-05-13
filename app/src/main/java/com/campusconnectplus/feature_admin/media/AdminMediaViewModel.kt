@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.campusconnectplus.data.repository.Media
 import com.campusconnectplus.data.repository.MediaRepository
 import com.campusconnectplus.data.repository.MediaType
+import com.campusconnectplus.core.util.FileCache
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +22,7 @@ import javax.inject.Inject
 class AdminMediaViewModel @Inject constructor(
     private val repo: MediaRepository,
     private val eventRepo: com.campusconnectplus.data.repository.EventRepository,
+    private val fileCache: FileCache,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -47,27 +49,38 @@ class AdminMediaViewModel @Inject constructor(
     fun uploadMedia(uri: Uri, title: String, type: MediaType, targetEventId: String? = null) {
         viewModelScope.launch {
             try {
-                _snackbarMessage.value = "Uploading file..."
-                val inputStream = context.contentResolver.openInputStream(uri)
-                val bytes = inputStream?.readBytes() ?: return@launch
-                val fileName = "${UUID.randomUUID()}_${uri.lastPathSegment ?: "file"}"
+                _snackbarMessage.value = "Saving locally..."
                 
-                val publicUrl = repo.uploadFile("media", fileName, bytes)
+                // Cache the file locally first
+                val cachedFile = fileCache.cacheFile(uri)
+                val fileName = cachedFile.name
+                val bytes = cachedFile.readBytes()
 
                 val newMedia = Media(
-                    id = "", // Let Supabase generate UUID
+                    id = UUID.randomUUID().toString(), // Temp ID for local
                     eventId = targetEventId ?: eventId.value ?: "",
-                    url = publicUrl,
+                    url = "", // Will be updated after remote upload
                     type = type,
                     title = title,
                     fileName = fileName,
                     date = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date()),
-                    sizeMb = (bytes.size / (1024.0 * 1024.0)).toInt().coerceAtLeast(1)
+                    sizeMb = (bytes.size / (1024.0 * 1024.0)).toInt().coerceAtLeast(1),
+                    localPath = cachedFile.absolutePath
                 )
+                
+                // Save to local DB via repo (which should handle local first)
                 repo.upsert(newMedia)
+                _snackbarMessage.value = "Media saved locally. Uploading..."
+
+                // Remote upload
+                val publicUrl = repo.uploadFile("media", fileName, bytes)
+                
+                // Update with public URL
+                repo.upsert(newMedia.copy(url = publicUrl))
+                
                 _snackbarMessage.value = "Media uploaded successfully"
             } catch (e: Exception) {
-                _snackbarMessage.value = "Upload failed: ${e.localizedMessage}"
+                _snackbarMessage.value = "Upload failed: ${e.localizedMessage}. It will retry when online."
                 e.printStackTrace()
             }
         }
@@ -75,5 +88,17 @@ class AdminMediaViewModel @Inject constructor(
 
     fun delete(id: String) {
         viewModelScope.launch { repo.delete(id) }
+    }
+
+    fun updateMediaEvent(media: Media, newEventId: String?) {
+        viewModelScope.launch {
+            try {
+                val updated = media.copy(eventId = newEventId ?: "")
+                repo.upsert(updated)
+                _snackbarMessage.value = "Link updated"
+            } catch (e: Exception) {
+                _snackbarMessage.value = "Update failed: ${e.localizedMessage}"
+            }
+        }
     }
 }

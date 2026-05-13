@@ -38,6 +38,7 @@ fun MediaEntity.toModel(): Media =
         duration = duration ?: "",
         saves = saves,
         coverUrl = coverUrl ?: "",
+        localPath = localPath,
         updatedAt = updatedAt
     )
 
@@ -54,6 +55,7 @@ fun Media.toEntity(): MediaEntity =
         duration = duration,
         saves = saves,
         coverUrl = coverUrl,
+        localPath = localPath,
         updatedAt = updatedAt
     )
 

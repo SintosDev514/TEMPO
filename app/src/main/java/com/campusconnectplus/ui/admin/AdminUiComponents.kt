@@ -64,18 +64,6 @@ fun TopBar(title: String, subtitle: String, onPrimary: (() -> Unit)? = null) {
             }
 
             if (onPrimary != null) {
-                val ctx = LocalContext.current
-                IconButton(
-                    onClick = { Toast.makeText(ctx, "No new notifications", Toast.LENGTH_SHORT).show() },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.15f)),
-                    colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
-                ) {
-                    Icon(Icons.Outlined.Notifications, contentDescription = "Notifications", modifier = Modifier.size(22.dp))
-                }
-                Spacer(Modifier.width(8.dp))
                 FilledTonalButton(
                     onClick = onPrimary,
                     colors = ButtonDefaults.filledTonalButtonColors(

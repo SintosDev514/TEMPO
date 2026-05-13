@@ -9,11 +9,13 @@ import com.campusconnectplus.data.repository.FavoriteRepository
 import com.campusconnectplus.data.repository.MediaRepository
 import com.campusconnectplus.core.network.NetworkMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class HomeStats(
@@ -59,4 +61,20 @@ class StudentHomeViewModel @Inject constructor(
             savedCount = favs.first.size + favs.second.size
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeStats())
+    val isRefreshing = MutableStateFlow(false)
+
+    fun refresh() {
+        viewModelScope.launch {
+            isRefreshing.value = true
+            try {
+                eventRepo.sync()
+                mediaRepo.sync()
+                annRepo.sync()
+            } catch (e: Exception) {
+                // Handle sync error if needed
+            } finally {
+                isRefreshing.value = false
+            }
+        }
+    }
 }

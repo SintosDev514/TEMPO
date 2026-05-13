@@ -37,4 +37,8 @@ class FakeAnnouncementRepository : AnnouncementRepository {
             items.value = items.value.filterNot { it.id == id }
         }
     }
+
+    override suspend fun sync() {
+        // No-op for fake repository
+    }
 }

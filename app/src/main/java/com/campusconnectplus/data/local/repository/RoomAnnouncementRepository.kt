@@ -20,4 +20,8 @@ class RoomAnnouncementRepository(
     override suspend fun delete(id: String) {
         dao.delete(id)
     }
+
+    override suspend fun sync() {
+        // Implementation for sync with remote source
+    }
 }

@@ -6,4 +6,5 @@ interface AnnouncementRepository {
     fun observeAnnouncements(): Flow<List<Announcement>>
     suspend fun upsert(announcement: Announcement)
     suspend fun delete(id: String)
+    suspend fun sync()
 }

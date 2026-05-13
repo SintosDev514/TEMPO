@@ -48,13 +48,8 @@ class SupabaseAnnouncementRepository @Inject constructor(
 
     override fun observeAnnouncements(): Flow<List<Announcement>> = flow {
         // 1. Initial Fetch
-        try {
-            val initial = postgrest["announcements"].select().decodeList<RemoteAnnouncement>()
-            emit(initial.map { it.toModel() })
-        } catch (e: Exception) {
-            println("Initial fetch error (announcements): ${e.message}")
-            emit(emptyList())
-        }
+        val initial = postgrest["announcements"].select().decodeList<RemoteAnnouncement>()
+        emit(initial.map { it.toModel() })
 
         // 2. Realtime
         val channelId = "announcements_realtime_${UUID.randomUUID()}"
@@ -70,8 +65,6 @@ class SupabaseAnnouncementRepository @Inject constructor(
                 val updated = postgrest["announcements"].select().decodeList<RemoteAnnouncement>()
                 emit(updated.map { it.toModel() })
             }
-        } catch (e: Exception) {
-            println("Realtime error (announcements): ${e.message}")
         } finally {
             try { realtime.removeChannel(channel) } catch (e: Exception) {}
         }
@@ -101,4 +94,6 @@ class SupabaseAnnouncementRepository @Inject constructor(
             }
         }
     }
+
+    override suspend fun sync() {}
 }

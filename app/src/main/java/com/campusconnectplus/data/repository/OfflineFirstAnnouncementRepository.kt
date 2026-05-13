@@ -15,6 +15,12 @@ class OfflineFirstAnnouncementRepository @Inject constructor(
 ) : AnnouncementRepository {
 
     override fun observeAnnouncements(): Flow<List<Announcement>> = channelFlow {
+        val localJob = launch {
+            local.observeAll()
+                .map { list -> list.map { it.toModel() } }
+                .collect { send(it) }
+        }
+
         val syncJob = launch(Dispatchers.IO) {
             remote.observeAnnouncements()
                 .retryWhen { _, attempt ->
@@ -28,20 +34,33 @@ class OfflineFirstAnnouncementRepository @Inject constructor(
                 }
         }
 
-        local.observeAll()
-            .map { list -> list.map { it.toModel() } }
-            .collect { send(it) }
-
-        awaitClose { syncJob.cancel() }
+        awaitClose { 
+            localJob.cancel()
+            syncJob.cancel() 
+        }
     }
 
     override suspend fun upsert(announcement: Announcement) {
-        remote.upsert(announcement)
         local.upsert(announcement.toEntity())
+        try {
+            remote.upsert(announcement)
+        } catch (e: Exception) {
+            println("Offline: Announcement will be synced later.")
+        }
     }
 
     override suspend fun delete(id: String) {
-        remote.delete(id)
         local.delete(id)
+        try {
+            remote.delete(id)
+        } catch (e: Exception) {
+            println("Offline: Deletion will be synced later.")
+        }
+    }
+
+    override suspend fun sync() {
+        remote.observeAnnouncements().collectLatest { remoteList ->
+            local.sync(remoteList.map { it.toEntity() })
+        }
     }
 }

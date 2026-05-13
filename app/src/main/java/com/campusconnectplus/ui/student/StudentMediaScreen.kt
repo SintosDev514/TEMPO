@@ -17,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Search
@@ -43,10 +45,12 @@ import com.campusconnectplus.core.ui.components.VideoPlayer
 import com.campusconnectplus.data.repository.MediaType
 import com.campusconnectplus.feature_student.media.StudentMediaViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentMediaScreen(vm: StudentMediaViewModel) {
     val media by vm.media.collectAsState()
     val isOnline by vm.isOnline.collectAsState()
+    val refreshing by vm.isRefreshing.collectAsState()
     val favIds by vm.favoriteMediaIds.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("All") }
@@ -68,27 +72,32 @@ fun StudentMediaScreen(vm: StudentMediaViewModel) {
         }
     }
 
-    Column(Modifier.fillMaxSize()) {
-        AnimatedVisibility(
-            visible = !isOnline,
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            Surface(
-                color = MaterialTheme.colorScheme.errorContainer,
-                modifier = Modifier.fillMaxWidth()
+    PullToRefreshBox(
+        isRefreshing = refreshing,
+        onRefresh = { vm.refresh() },
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            AnimatedVisibility(
+                visible = !isOnline,
+                enter = expandVertically(),
+                exit = shrinkVertically()
             ) {
-                Row(
-                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Outlined.CloudOff, null, tint = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Offline: Showing cached media", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                    Row(
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(Icons.Outlined.CloudOff, null, tint = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Offline: Showing cached media", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                    }
                 }
             }
-        }
         // Header - Aligned to Professional Blue Theme
         Column(
             modifier = Modifier
@@ -236,6 +245,7 @@ fun StudentMediaScreen(vm: StudentMediaViewModel) {
                     )
                 }
             }
+        }
         }
     }
 

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,12 +44,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.max
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun StudentHomeScreen(
     homeStats: StateFlow<HomeStats>,
     events: StateFlow<List<Event>>,
     isOnline: StateFlow<Boolean>,
+    isRefreshing: StateFlow<Boolean>,
+    onRefresh: () -> Unit,
     onQuickNavigateEvents: () -> Unit,
     onQuickNavigateMedia: () -> Unit,
     onQuickNavigateSaved: () -> Unit,
@@ -59,6 +62,7 @@ fun StudentHomeScreen(
     val stats by homeStats.collectAsState(initial = HomeStats())
     val eventList by events.collectAsState(initial = emptyList())
     val online by isOnline.collectAsState(initial = true)
+    val refreshing by isRefreshing.collectAsState()
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     
@@ -71,7 +75,12 @@ fun StudentHomeScreen(
 
     // UI improvement: hide default overscroll glow, keep design clean
     CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
-        Box(Modifier.fillMaxSize()) {
+        PullToRefreshBox(
+            isRefreshing = refreshing,
+            onRefresh = onRefresh,
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
@@ -96,27 +105,31 @@ fun StudentHomeScreen(
 
                 if (eventList.isNotEmpty()) {
                     item {
-                        SectionTitle("Event Highlights")
-                        Spacer(Modifier.height(14.dp))
-                        EventHighlightsCarousel(eventList.take(5), getMediaForEvent)
+                        Column {
+                            SectionTitle("Event Highlights")
+                            Spacer(Modifier.height(14.dp))
+                            EventHighlightsCarousel(eventList.take(5), getMediaForEvent)
+                        }
                     }
                     item { Spacer(Modifier.height(24.dp)) }
                 }
 
                 item {
-                    SectionTitle("Quick Access")
-                    Spacer(Modifier.height(10.dp))
-                    QuickAccessGrid(
-                        onEvents = onQuickNavigateEvents,
-                        onMedia = onQuickNavigateMedia,
-                        onSaved = onQuickNavigateSaved,
-                        onAnnouncements = onQuickNavigateAnnouncements,
-                        activeEvents = activeEvents,
-                        totalPhotos = totalPhotos,
-                        savedItems = savedItems,
-                        announcementsCount = announcementsCount,
-                        isLandscape = isLandscape
-                    )
+                    Column {
+                        SectionTitle("Quick Access")
+                        Spacer(Modifier.height(10.dp))
+                        QuickAccessGrid(
+                            onEvents = onQuickNavigateEvents,
+                            onMedia = onQuickNavigateMedia,
+                            onSaved = onQuickNavigateSaved,
+                            onAnnouncements = onQuickNavigateAnnouncements,
+                            activeEvents = activeEvents,
+                            totalPhotos = totalPhotos,
+                            savedItems = savedItems,
+                            announcementsCount = announcementsCount,
+                            isLandscape = isLandscape
+                        )
+                    }
                 }
 
                 item { Spacer(Modifier.height(16.dp)) }
@@ -128,7 +141,6 @@ fun StudentHomeScreen(
                     item { Spacer(Modifier.height(24.dp)) }
                 }
             }
-
             // UI improvement: custom slim scrollbar (won’t “damage” UI like side scroll indicator)
             SlimScrollbar(listState = listState, modifier = Modifier.align(Alignment.CenterEnd))
         }
@@ -207,9 +219,10 @@ private fun HomeHeader(
             
             // Canvas-drawn engagement ring (animation/canvas UI idea)
             val totalContent = maxOf(1, activeEvents + totalPhotos)
-
-
-            
+            StatRingCanvas(
+                progress = (activeEvents.toFloat() / totalContent.toFloat()).coerceIn(0f, 1f),
+                ringSize = if (isLandscape) 32.dp else 40.dp
+            )
             Spacer(Modifier.width(if (isLandscape) 12.dp else 8.dp))
             
             Surface(

@@ -102,6 +102,8 @@ class MainActivity : ComponentActivity() {
                                         homeStats = homeVm.homeStats,
                                         events = homeVm.events,
                                         isOnline = homeVm.isOnline,
+                                        isRefreshing = homeVm.isRefreshing,
+                                        onRefresh = homeVm::refresh,
                                         onQuickNavigateEvents = { nav.navigate(StudentTab.Events.route) },
                                         onQuickNavigateMedia = { nav.navigate(StudentTab.Media.route) },
                                         onQuickNavigateSaved = { nav.navigate(StudentTab.Saved.route) },

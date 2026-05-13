@@ -2,7 +2,10 @@ package com.campusconnectplus.ui.admin
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalOverscrollConfiguration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,10 +17,14 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.campusconnectplus.core.ui.components.FloatingScrollbar
 import com.campusconnectplus.data.repository.Announcement
 import com.campusconnectplus.data.repository.AnnouncementStatus
@@ -124,28 +131,92 @@ private fun CreateAnnouncementDialog(
     var priority by remember { mutableStateOf("Normal") }
     var status by remember { mutableStateOf("Pending") }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create New Announcement") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(title, { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(content, { content = it }, label = { Text("Content") }, modifier = Modifier.fillMaxWidth())
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .fillMaxHeight(0.9f)
+                .clip(RoundedCornerShape(20.dp)),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(AdminColors.HeaderBrush)
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Outlined.Campaign, contentDescription = null, modifier = Modifier.size(28.dp), tint = Color.White)
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        "Create New Announcement",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    ExposedDropdown("Priority Level", priority, listOf("Normal", "Important"), { priority = it }, Modifier.weight(1f))
-                    ExposedDropdown("Status", status, listOf("Draft", "Pending", "Published"), { status = it }, Modifier.weight(1f))
+                // Scrollable Content
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Title") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    OutlinedTextField(
+                        value = content,
+                        onValueChange = { content = it },
+                        label = { Text("Content") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 5,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        ExposedDropdown("Priority Level", priority, listOf("Normal", "Important"), { priority = it }, Modifier.weight(1f))
+                        ExposedDropdown("Status", status, listOf("Draft", "Pending", "Published"), { status = it }, Modifier.weight(1f))
+                    }
+                }
+
+                // Footer Buttons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(AdminColors.Background)
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Button(
+                        onClick = { onCreate(title, content, priority, status) },
+                        colors = ButtonDefaults.buttonColors(containerColor = AdminColors.Primary),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Create Announcement", fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onCreate(title, content, priority, status) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B2A6B))
-            ) { Text("Create Announcement") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
-    )
+        }
+    }
 }
 
 @Composable
@@ -166,41 +237,105 @@ private fun EditAnnouncementDialog(
         )
     }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Announcement") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(title, { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(content, { content = it }, label = { Text("Content") }, modifier = Modifier.fillMaxWidth())
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    ExposedDropdown("Priority Level", priority, listOf("Normal", "Important"), { priority = it }, Modifier.weight(1f))
-                    ExposedDropdown("Status", status, listOf("Draft", "Pending", "Published"), { status = it }, Modifier.weight(1f))
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .fillMaxHeight(0.9f)
+                .clip(RoundedCornerShape(20.dp)),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(AdminColors.HeaderBrush)
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Outlined.Campaign, contentDescription = null, modifier = Modifier.size(28.dp), tint = Color.White)
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        "Edit Announcement",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                // Scrollable Content
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Title") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    OutlinedTextField(
+                        value = content,
+                        onValueChange = { content = it },
+                        label = { Text("Content") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 5,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        ExposedDropdown("Priority Level", priority, listOf("Normal", "Important"), { priority = it }, Modifier.weight(1f))
+                        ExposedDropdown("Status", status, listOf("Draft", "Pending", "Published"), { status = it }, Modifier.weight(1f))
+                    }
+                }
+
+                // Footer Buttons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(AdminColors.Background)
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Button(
+                        onClick = {
+                            onSave(
+                                initial.copy(
+                                    title = title,
+                                    content = content,
+                                    priority = if (priority == "Important") 1 else 0,
+                                    status = when (status) {
+                                        "Published" -> AnnouncementStatus.ACTIVE
+                                        "Draft" -> AnnouncementStatus.ARCHIVED
+                                        else -> AnnouncementStatus.ACTIVE
+                                    },
+                                    updatedAt = System.currentTimeMillis()
+                                )
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = AdminColors.Primary),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Update", fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onSave(
-                        initial.copy(
-                            title = title,
-                            content = content,
-                            priority = if (priority == "Important") 1 else 0,
-                            status = when (status) {
-                                "Published" -> AnnouncementStatus.ACTIVE
-                                "Draft" -> AnnouncementStatus.ARCHIVED
-                                else -> AnnouncementStatus.ACTIVE
-                            },
-                            updatedAt = System.currentTimeMillis()
-                        )
-                    )
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B2A6B))
-            ) { Text("Update") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
-    )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

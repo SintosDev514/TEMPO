@@ -45,4 +45,8 @@ class FakeMediaRepository : MediaRepository {
     override suspend fun uploadFile(bucket: String, path: String, byteArray: ByteArray): String {
         return "https://fake-supabase-storage.com/$bucket/$path"
     }
+
+    override suspend fun sync() {
+        // No-op for fake repository
+    }
 }

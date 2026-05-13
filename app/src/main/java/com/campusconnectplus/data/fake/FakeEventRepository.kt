@@ -61,4 +61,8 @@ class FakeEventRepository : EventRepository {
             events.value = events.value.filterNot { it.id == eventId }
         }
     }
+
+    override suspend fun sync() {
+        // No-op for fake repository
+    }
 }

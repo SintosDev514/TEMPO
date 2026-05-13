@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -38,16 +39,15 @@ class StudentEventsViewModel @Inject constructor(
     val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
-    val eventsState: StateFlow<UiState<List<Event>>> = combine(
-        eventRepo.observeEvents(),
-        isOnline
-    ) { events, _ ->
-        if (events.isEmpty()) UiState.Loading else UiState.Success(events)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = UiState.Loading
-    )
+    val eventsState: StateFlow<UiState<List<Event>>> = eventRepo.observeEvents()
+        .map { events ->
+            UiState.Success(events)
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = UiState.Loading
+        )
 
     val favoriteEventIds: StateFlow<Set<String>> =
         favoriteRepo.observeFavoriteEventIds()
@@ -74,8 +74,13 @@ class StudentEventsViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            delay(600)
-            _isRefreshing.value = false
+            try {
+                eventRepo.sync()
+            } catch (e: Exception) {
+                _snackbarMessage.value = "Failed to sync events"
+            } finally {
+                _isRefreshing.value = false
+            }
         }
     }
 

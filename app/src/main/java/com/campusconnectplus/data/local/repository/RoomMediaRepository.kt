@@ -27,4 +27,8 @@ class RoomMediaRepository(
     override suspend fun uploadFile(bucket: String, path: String, byteArray: ByteArray): String {
         return "" // Not supported in Room
     }
+
+    override suspend fun sync() {
+        // Implementation for sync with remote source
+    }
 }

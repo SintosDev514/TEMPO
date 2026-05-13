@@ -8,4 +8,5 @@ interface MediaRepository {
     suspend fun upsert(media: Media)
     suspend fun delete(mediaId: String)
     suspend fun uploadFile(bucket: String, path: String, byteArray: ByteArray): String
+    suspend fun sync()
 }

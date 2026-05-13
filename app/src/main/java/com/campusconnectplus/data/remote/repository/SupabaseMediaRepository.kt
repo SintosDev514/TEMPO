@@ -62,13 +62,8 @@ class SupabaseMediaRepository @Inject constructor(
 
     override fun observeMedia(): Flow<List<Media>> = flow {
         // 1. Initial Fetch
-        try {
-            val initial = postgrest["media"].select().decodeList<RemoteMedia>()
-            emit(initial.map { it.toModel() })
-        } catch (e: Exception) {
-            println("Initial fetch error (media): ${e.message}")
-            emit(emptyList())
-        }
+        val initial = postgrest["media"].select().decodeList<RemoteMedia>()
+        emit(initial.map { it.toModel() })
 
         // 2. Realtime
         val channelId = "media_realtime_${UUID.randomUUID()}"
@@ -83,8 +78,6 @@ class SupabaseMediaRepository @Inject constructor(
                 val updated = postgrest["media"].select().decodeList<RemoteMedia>()
                 emit(updated.map { it.toModel() })
             }
-        } catch (e: Exception) {
-            println("Realtime error (media): ${e.message}")
         } finally {
             try { realtime.removeChannel(channel) } catch (e: Exception) {}
         }
@@ -92,15 +85,10 @@ class SupabaseMediaRepository @Inject constructor(
 
     override fun ofEvent(eventId: String): Flow<List<Media>> = flow {
         // 1. Initial Fetch
-        try {
-            val initial = postgrest["media"].select {
-                filter { eq("event_id", eventId) }
-            }.decodeList<RemoteMedia>()
-            emit(initial.map { it.toModel() })
-        } catch (e: Exception) {
-            println("Initial fetch error (media of event): ${e.message}")
-            emit(emptyList())
-        }
+        val initial = postgrest["media"].select {
+            filter { eq("event_id", eventId) }
+        }.decodeList<RemoteMedia>()
+        emit(initial.map { it.toModel() })
 
         // 2. Realtime
         val channelId = "media_event_realtime_${eventId}_${UUID.randomUUID()}"
@@ -117,8 +105,6 @@ class SupabaseMediaRepository @Inject constructor(
                 }.decodeList<RemoteMedia>()
                 emit(updated.map { it.toModel() })
             }
-        } catch (e: Exception) {
-            println("Realtime error (media of event): ${e.message}")
         } finally {
             try { realtime.removeChannel(channel) } catch (e: Exception) {}
         }
@@ -189,5 +175,10 @@ class SupabaseMediaRepository @Inject constructor(
                 e.printStackTrace()
             }
         }
+    }
+
+    override suspend fun sync() {
+        // Initial fetch logic is already in observeMedia. 
+        // We could implement a force-refresh if needed.
     }
 }

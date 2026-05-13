@@ -47,13 +47,8 @@ class SupabaseEventRepository @Inject constructor(
 ) : EventRepository {
 
     override fun observeEvents(): Flow<List<Event>> = flow {
-        try {
-            val initialEvents = postgrest["events"].select().decodeList<RemoteEvent>()
-            emit(initialEvents.map { it.toModel() })
-        } catch (e: Exception) {
-            println("FETCH ERROR (events): ${e.message}")
-            emit(emptyList())
-        }
+        val initialEvents = postgrest["events"].select().decodeList<RemoteEvent>()
+        emit(initialEvents.map { it.toModel() })
 
         val channelId = "events_${UUID.randomUUID()}"
         val channel = realtime.channel(channelId)
@@ -66,22 +61,16 @@ class SupabaseEventRepository @Inject constructor(
                 val updatedEvents = postgrest["events"].select().decodeList<RemoteEvent>()
                 emit(updatedEvents.map { it.toModel() })
             }
-        } catch (e: Exception) {
-            println("REALTIME ERROR (events): ${e.message}")
         } finally {
             try { realtime.removeChannel(channel) } catch (e: Exception) {}
         }
     }.flowOn(Dispatchers.IO)
 
     override fun observeEvent(eventId: String): Flow<Event?> = flow {
-        try {
-            val initialEvent = postgrest["events"].select {
-                filter { eq("id", eventId) }
-            }.decodeSingleOrNull<RemoteEvent>()
-            emit(initialEvent?.toModel())
-        } catch (e: Exception) {
-            println("FETCH ERROR (event $eventId): ${e.message}")
-        }
+        val initialEvent = postgrest["events"].select {
+            filter { eq("id", eventId) }
+        }.decodeSingleOrNull<RemoteEvent>()
+        emit(initialEvent?.toModel())
 
         val channelId = "event_${eventId}_${UUID.randomUUID()}"
         val channel = realtime.channel(channelId)
@@ -96,8 +85,6 @@ class SupabaseEventRepository @Inject constructor(
                 }.decodeSingleOrNull<RemoteEvent>()
                 emit(updatedEvent?.toModel())
             }
-        } catch (e: Exception) {
-            println("REALTIME ERROR (event $eventId): ${e.message}")
         } finally {
             try { realtime.removeChannel(channel) } catch (e: Exception) {}
         }
@@ -125,4 +112,6 @@ class SupabaseEventRepository @Inject constructor(
             }
         }
     }
+
+    override suspend fun sync() {}
 }

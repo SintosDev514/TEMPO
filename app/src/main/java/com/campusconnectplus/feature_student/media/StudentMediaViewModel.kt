@@ -13,6 +13,8 @@ import com.campusconnectplus.data.repository.MediaRepository
 import com.campusconnectplus.core.network.NetworkMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -29,6 +31,22 @@ class StudentMediaViewModel @Inject constructor(
 
     val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    fun refresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                mediaRepo.sync()
+            } catch (e: Exception) {
+                // Ignore
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
 
     val media = mediaRepo.observeMedia()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())

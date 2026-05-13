@@ -34,6 +34,7 @@ data class Media(
     val duration: String = "",       // only meaningful for VIDEO; keep String for simplicity
     val saves: Int = 0,              // used by fake repo (“saves”)
     val coverUrl: String = "",       // used by event/media fake repo (“coverUrl”)
+    val localPath: String? = null,
 
     val updatedAt: Long = System.currentTimeMillis()
 )

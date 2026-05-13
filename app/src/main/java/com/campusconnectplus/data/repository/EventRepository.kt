@@ -7,4 +7,5 @@ interface EventRepository {
     fun observeEvent(eventId: String): Flow<Event?>
     suspend fun upsert(event: Event)
     suspend fun delete(eventId: String)
+    suspend fun sync()
 }

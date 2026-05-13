@@ -15,6 +15,14 @@ class OfflineFirstEventRepository @Inject constructor(
 ) : EventRepository {
 
     override fun observeEvents(): Flow<List<Event>> = channelFlow {
+        // Collect local data first and immediately
+        val localJob = launch {
+            local.observeAll()
+                .map { list -> list.map { it.toModel() } }
+                .collect { send(it) }
+        }
+
+        // Then try to sync from remote
         val syncJob = launch(Dispatchers.IO) {
             remote.observeEvents()
                 .retryWhen { _, attempt ->
@@ -28,14 +36,19 @@ class OfflineFirstEventRepository @Inject constructor(
                 }
         }
 
-        local.observeAll()
-            .map { list -> list.map { it.toModel() } }
-            .collect { send(it) }
-
-        awaitClose { syncJob.cancel() }
+        awaitClose { 
+            localJob.cancel()
+            syncJob.cancel() 
+        }
     }
 
     override fun observeEvent(eventId: String): Flow<Event?> = channelFlow {
+        val localJob = launch {
+            local.observeById(eventId)
+                .map { it?.toModel() }
+                .collect { send(it) }
+        }
+
         val syncJob = launch(Dispatchers.IO) {
             remote.observeEvent(eventId)
                 .retryWhen { _, attempt ->
@@ -49,20 +62,36 @@ class OfflineFirstEventRepository @Inject constructor(
                 }
         }
 
-        local.observeById(eventId)
-            .map { it?.toModel() }
-            .collect { send(it) }
-
-        awaitClose { syncJob.cancel() }
+        awaitClose { 
+            localJob.cancel()
+            syncJob.cancel() 
+        }
     }
 
     override suspend fun upsert(event: Event) {
-        remote.upsert(event)
+        // Save locally first
         local.upsert(event.toEntity())
+        
+        // Then attempt remote
+        try {
+            remote.upsert(event)
+        } catch (e: Exception) {
+            println("Offline: Event will be synced when online.")
+        }
     }
 
     override suspend fun delete(eventId: String) {
-        remote.delete(eventId)
         local.delete(eventId)
+        try {
+            remote.delete(eventId)
+        } catch (e: Exception) {
+            println("Offline: Event deletion will be synced when online.")
+        }
+    }
+
+    override suspend fun sync() {
+        remote.observeEvents().collectLatest { remoteList ->
+            local.sync(remoteList.map { it.toEntity() })
+        }
     }
 }

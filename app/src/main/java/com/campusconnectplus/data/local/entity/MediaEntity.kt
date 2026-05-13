@@ -16,5 +16,6 @@ data class MediaEntity(
     val duration: String?,
     val saves: Int,
     val coverUrl: String?,
+    val localPath: String? = null,
     val updatedAt: Long
 )
