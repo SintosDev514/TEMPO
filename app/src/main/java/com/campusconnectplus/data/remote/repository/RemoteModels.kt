@@ -21,6 +21,7 @@ data class RemoteEvent(
     val venue: String? = null,
     val description: String? = null,
     val category: String? = null,
+    val reaction_counts: Map<String, Int>? = null,
     val updated_at: Long? = null,
     val created_at: Long? = null
 )

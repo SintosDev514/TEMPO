@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.campusconnectplus.data.repository.ReactionType
+
 @HiltViewModel
 class StudentEventsViewModel @Inject constructor(
     private val eventRepo: EventRepository,
@@ -68,6 +70,16 @@ class StudentEventsViewModel @Inject constructor(
             val wasFavorite = favoriteEventIds.value.contains(eventId)
             favoriteRepo.toggleEvent(eventId)
             _snackbarMessage.value = if (wasFavorite) "Removed from saved" else "Saved to favorites"
+        }
+    }
+
+    fun reactToEvent(eventId: String, reactionType: ReactionType?) {
+        viewModelScope.launch {
+            try {
+                eventRepo.reactToEvent(eventId, reactionType)
+            } catch (e: Exception) {
+                _snackbarMessage.value = "Failed to update reaction"
+            }
         }
     }
 

@@ -89,6 +89,39 @@ class OfflineFirstEventRepository @Inject constructor(
         }
     }
 
+    override suspend fun reactToEvent(eventId: String, reactionType: ReactionType?) {
+        // Update local first for snappy UI
+        val current = local.observeById(eventId).take(1).firstOrNull()?.toModel()
+        current?.let {
+            val newCounts = it.reactionCounts.toMutableMap()
+            
+            // If there was a previous reaction, decrement it
+            it.userReaction?.let { prev ->
+                val prevCount = newCounts[prev] ?: 0
+                if (prevCount > 0) newCounts[prev] = prevCount - 1
+            }
+
+            // If there's a new reaction, increment it
+            reactionType?.let { r -> 
+                newCounts[r] = (newCounts[r] ?: 0) + 1 
+            }
+
+            val updated = it.copy(
+                userReaction = reactionType,
+                reactionCounts = newCounts,
+                updatedAt = System.currentTimeMillis()
+            )
+            local.upsert(updated.toEntity())
+        }
+
+        // Then remote
+        try {
+            remote.reactToEvent(eventId, reactionType)
+        } catch (e: Exception) {
+            println("Remote Reaction Error: ${e.message}")
+        }
+    }
+
     override suspend fun sync() {
         remote.observeEvents().take(1).collectLatest { remoteList ->
             local.sync(remoteList.map { it.toEntity() })

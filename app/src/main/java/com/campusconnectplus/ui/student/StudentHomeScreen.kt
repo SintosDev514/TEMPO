@@ -57,11 +57,12 @@ fun StudentHomeScreen(
     onQuickNavigateSaved: () -> Unit,
     onQuickNavigateAnnouncements: () -> Unit,
     onNavigateToAdmin: () -> Unit = {},
+    onReact: (String, com.campusconnectplus.data.repository.ReactionType?) -> Unit = { _, _ -> },
     getMediaForEvent: (String) -> kotlinx.coroutines.flow.Flow<List<com.campusconnectplus.data.repository.Media>>
 ) {
-    val stats by homeStats.collectAsState(initial = HomeStats())
-    val eventList by events.collectAsState(initial = emptyList())
-    val online by isOnline.collectAsState(initial = true)
+    val stats by homeStats.collectAsState()
+    val eventList by events.collectAsState()
+    val online by isOnline.collectAsState()
     val refreshing by isRefreshing.collectAsState()
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -103,12 +104,18 @@ fun StudentHomeScreen(
 
                 item { Spacer(Modifier.height(14.dp)) }
 
-                if (eventList.isNotEmpty()) {
+                if (refreshing && eventList.isEmpty()) {
+                    item {
+                        Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else if (eventList.isNotEmpty()) {
                     item {
                         Column {
                             SectionTitle("Event Highlights")
                             Spacer(Modifier.height(14.dp))
-                            EventHighlightsCarousel(eventList.take(5), getMediaForEvent)
+                            EventHighlightsCarousel(eventList.take(5), getMediaForEvent, onReact)
                         }
                     }
                     item { Spacer(Modifier.height(24.dp)) }
@@ -338,7 +345,8 @@ private fun SectionTitle(title: String) {
 @Composable
 private fun EventHighlightsCarousel(
     events: List<Event>,
-    getMediaForEvent: (String) -> kotlinx.coroutines.flow.Flow<List<com.campusconnectplus.data.repository.Media>>
+    getMediaForEvent: (String) -> kotlinx.coroutines.flow.Flow<List<com.campusconnectplus.data.repository.Media>>,
+    onReact: (String, com.campusconnectplus.data.repository.ReactionType?) -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { events.size })
     
@@ -362,6 +370,7 @@ private fun EventHighlightsCarousel(
         HighlightCard(
             event, 
             imageUrl = event.imageUrl ?: firstImageUrl,
+            onReact = { reaction -> onReact(event.id, reaction) },
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -371,6 +380,7 @@ private fun EventHighlightsCarousel(
 private fun HighlightCard(
     event: Event,
     imageUrl: String?,
+    onReact: (com.campusconnectplus.data.repository.ReactionType?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -452,6 +462,21 @@ private fun HighlightCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    ReactionButton(
+                        currentReaction = event.userReaction,
+                        onReact = onReact
+                    )
+                    
+                    ReactionSummary(reactionCounts = event.reactionCounts)
                 }
             }
         }
@@ -668,7 +693,7 @@ private fun SlimScrollbar(
         Box(
             Modifier
                 .align(Alignment.TopEnd)
-                .offset(y = (progress * 420).dp) // tuned for phone feel
+                .offset(y = (progress * 400).dp)
                 .height(54.dp)
                 .width(4.dp)
                 .clip(RoundedCornerShape(99.dp))

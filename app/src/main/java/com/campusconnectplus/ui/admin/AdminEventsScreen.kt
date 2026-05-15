@@ -57,6 +57,8 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import com.campusconnectplus.ui.student.ReactionSummary
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -173,6 +175,42 @@ fun AdminEventsScreen(vm: AdminEventsViewModel) {
                                         }
                                         Spacer(Modifier.height(8.dp))
                                         AssistChip(onClick = {}, label = { Text(e.category.name) })
+                                        
+                                        if (e.reactionCounts.values.sum() > 0) {
+                                            Spacer(Modifier.height(8.dp))
+                                            Surface(
+                                                color = Color(0xFFF1F5F9),
+                                                shape = RoundedCornerShape(12.dp),
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                                ) {
+                                                    Text(
+                                                        "Engagement",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFF64748B)
+                                                    )
+                                                    
+                                                    ReactionSummary(
+                                                        reactionCounts = e.reactionCounts,
+                                                        isLight = true
+                                                    )
+                                                    
+                                                    Spacer(Modifier.weight(1f))
+                                                    
+                                                    Text(
+                                                        "${e.reactionCounts.values.sum()} total",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = Color(0xFF64748B)
+                                                    )
+                                                }
+                                            }
+                                        }
+
                                         Spacer(Modifier.height(8.dp))
                                         Text(e.description, color = Color(0xFF334155))
                                     }

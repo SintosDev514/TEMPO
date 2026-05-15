@@ -3,6 +3,8 @@ package com.campusconnectplus.data.repository
 enum class MediaType { IMAGE, VIDEO }
 enum class EventCategory { ACADEMIC, CULTURAL, SPORTS }
 
+enum class ReactionType { LIKE, LOVE, WOW, SAD, ANGRY }
+
 
 enum class AnnouncementStatus { ACTIVE, ARCHIVED }
 
@@ -17,6 +19,8 @@ data class Event(
     val description: String,
     val category: EventCategory,
     val imageUrl: String? = null,
+    val reactionCounts: Map<ReactionType, Int> = emptyMap(),
+    val userReaction: ReactionType? = null,
     val updatedAt: Long = System.currentTimeMillis()
 )
 

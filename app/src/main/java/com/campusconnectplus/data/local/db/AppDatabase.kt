@@ -23,7 +23,7 @@ import com.campusconnectplus.data.local.entity.UserEntity
         UserEntity::class,
         FavoriteEntity::class
     ],
-    version = 5,
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -52,6 +52,10 @@ class StudentSavedViewModel @Inject constructor(
         viewModelScope.launch { favoriteRepo.toggleMedia(mediaId) }
     }
 
+    fun reactToEvent(eventId: String, reaction: com.campusconnectplus.data.repository.ReactionType?) {
+        viewModelScope.launch { eventRepo.reactToEvent(eventId, reaction) }
+    }
+
     fun getMediaForEvent(eventId: String): kotlinx.coroutines.flow.Flow<List<Media>> {
         return mediaRepo.ofEvent(eventId)
     }

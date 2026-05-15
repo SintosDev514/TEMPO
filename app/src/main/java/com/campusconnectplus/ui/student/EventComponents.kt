@@ -1,7 +1,10 @@
 package com.campusconnectplus.ui.student
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -14,7 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -26,20 +29,24 @@ import androidx.compose.ui.platform.LocalConfiguration
 import android.content.res.Configuration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Popup
 import coil.compose.AsyncImage
 import com.campusconnectplus.data.repository.Announcement
 import com.campusconnectplus.data.repository.Event
 import com.campusconnectplus.data.repository.Media
+import com.campusconnectplus.data.repository.ReactionType
 
 @Composable
 fun EventCard(
     event: Event,
     isSaved: Boolean,
     onToggleFavorite: () -> Unit,
+    onReact: (ReactionType?) -> Unit,
     onClick: () -> Unit,
     imageUrl: String? = event.imageUrl
 ) {
@@ -212,6 +219,160 @@ fun EventCard(
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    // Reaction Bar
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ReactionButton(
+                            currentReaction = event.userReaction,
+                            onReact = onReact
+                        )
+
+                        ReactionSummary(reactionCounts = event.reactionCounts)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReactionSummary(reactionCounts: Map<ReactionType, Int>, isLight: Boolean = false) {
+    val totalReactions = reactionCounts.values.sum()
+    if (totalReactions == 0) return
+
+    val topReactions = reactionCounts.entries
+        .filter { it.value > 0 }
+        .sortedByDescending { it.value }
+        .take(3)
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy((-6).dp) // Overlap icons
+    ) {
+        topReactions.forEach { (type, _) ->
+            Surface(
+                shape = CircleShape,
+                color = Color.White,
+                border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f)),
+                modifier = Modifier.size(20.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = when (type) {
+                            ReactionType.LIKE -> "👍"
+                            ReactionType.LOVE -> "❤️"
+                            ReactionType.WOW -> "😮"
+                            ReactionType.SAD -> "😢"
+                            ReactionType.ANGRY -> "😡"
+                        },
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.width(10.dp))
+
+        Text(
+            text = "$totalReactions",
+            style = MaterialTheme.typography.labelMedium,
+            color = if (isLight) Color(0xFF1E293B) else Color.White.copy(alpha = 0.9f),
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ReactionButton(
+    currentReaction: ReactionType?,
+    onReact: (ReactionType?) -> Unit
+) {
+    var showReactions by remember { mutableStateOf(false) }
+
+    Box {
+        Surface(
+            modifier = Modifier.combinedClickable(
+                onClick = { 
+                    if (currentReaction != null) onReact(null)
+                    else onReact(ReactionType.LIKE)
+                },
+                onLongClick = {
+                    showReactions = true
+                }
+            ),
+            shape = RoundedCornerShape(24.dp),
+            color = if (currentReaction != null) 
+                MaterialTheme.colorScheme.primary 
+            else 
+                Color.White.copy(alpha = 0.15f),
+            border = if (currentReaction == null) 
+                BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)) 
+            else null
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val (icon, text) = when (currentReaction) {
+                    ReactionType.LIKE -> "👍" to "Like"
+                    ReactionType.LOVE -> "❤️" to "Love"
+                    ReactionType.WOW -> "😮" to "Wow"
+                    ReactionType.SAD -> "😢" to "Sad"
+                    ReactionType.ANGRY -> "😡" to "Angry"
+                    null -> "👍" to "Like"
+                }
+                Text(icon, fontSize = 16.sp)
+                Text(
+                    text,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        
+        if (showReactions) {
+            Popup(
+                onDismissRequest = { showReactions = false },
+                offset = IntOffset(0, -120)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(32.dp),
+                    color = Color.White,
+                    shadowElevation = 8.dp,
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        ReactionType.values().forEach { type ->
+                            Text(
+                                text = when (type) {
+                                    ReactionType.LIKE -> "👍"
+                                    ReactionType.LOVE -> "❤️"
+                                    ReactionType.WOW -> "😮"
+                                    ReactionType.SAD -> "😢"
+                                    ReactionType.ANGRY -> "😡"
+                                },
+                                fontSize = 28.sp,
+                                modifier = Modifier
+                                    .clickable {
+                                        onReact(type)
+                                        showReactions = false
+                                    }
+                                    .padding(4.dp)
+                            )
+                        }
                     }
                 }
             }

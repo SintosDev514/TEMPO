@@ -2,6 +2,7 @@ package com.campusconnectplus.data.remote.repository
 
 import com.campusconnectplus.data.repository.Event
 import com.campusconnectplus.data.repository.EventRepository
+import com.campusconnectplus.data.repository.ReactionType
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.PostgresAction
@@ -28,6 +29,10 @@ fun RemoteEvent.toModel() = Event(
     } catch (e: Exception) { 
         com.campusconnectplus.data.repository.EventCategory.ACADEMIC 
     },
+    reactionCounts = reaction_counts?.mapKeys { 
+        try { com.campusconnectplus.data.repository.ReactionType.valueOf(it.key.uppercase()) } 
+        catch (e: Exception) { com.campusconnectplus.data.repository.ReactionType.LIKE }
+    } ?: emptyMap(),
     updatedAt = updated_at ?: System.currentTimeMillis()
 )
 
@@ -109,6 +114,38 @@ class SupabaseEventRepository @Inject constructor(
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+    override suspend fun reactToEvent(eventId: String, reactionType: ReactionType?) {
+        withContext(Dispatchers.IO) {
+            try {
+                // Get current event to update counts
+                val current = postgrest["events"].select {
+                    filter { eq("id", eventId) }
+                }.decodeSingleOrNull<RemoteEvent>() ?: return@withContext
+
+                val counts = current.reaction_counts?.toMutableMap() ?: mutableMapOf()
+                
+                // Note: Simplified logic. Real implementation would track user-specific reactions
+                // in a separate table and use a DB trigger/RPC to update counts.
+                // Here we just increment for demo/local feel if we were updating counts directly.
+                // Since 'reaction_counts' is likely a summary field:
+                
+                reactionType?.let {
+                    val key = it.name.lowercase()
+                    counts[key] = (counts[key] ?: 0) + 1
+                }
+
+                postgrest["events"].update({
+                    set("reaction_counts", counts)
+                    set("updated_at", System.currentTimeMillis())
+                }) {
+                    filter { eq("id", eventId) }
+                }
+            } catch (e: Exception) {
+                println("REACT ERROR: ${e.message}")
             }
         }
     }

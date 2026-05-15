@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
@@ -76,22 +77,15 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = nav,
                         startDestination = StudentTab.Home.route,
-                        enterTransition = {
-                            if (targetState.destination.route == "admin/login") fadeIn() else EnterTransition.None
-                        },
-                        exitTransition = {
-                            if (initialState.destination.route == "admin/login") fadeOut() else ExitTransition.None
-                        },
-                        popEnterTransition = {
-                            if (targetState.destination.route == "admin/login") fadeIn() else EnterTransition.None
-                        },
-                        popExitTransition = {
-                            if (initialState.destination.route == "admin/login") fadeOut() else ExitTransition.None
-                        }
+                        enterTransition = { fadeIn(tween(300)) },
+                        exitTransition = { fadeOut(tween(300)) },
+                        popEnterTransition = { fadeIn(tween(300)) },
+                        popExitTransition = { fadeOut(tween(300)) }
                     ) {
 
                         composable(StudentTab.Home.route) {
                             val homeVm: com.campusconnectplus.feature_student.home.StudentHomeViewModel = hiltViewModel()
+                            val studentEventsVm: com.campusconnectplus.feature_student.events.StudentEventsViewModel = hiltViewModel()
                             LaunchedEffect(Unit) { DebugLog.log("MainActivity.kt:Home", "Student home composed", emptyMap(), "H1") }
                             Box(Modifier.fillMaxSize()) {
                                 StudentScaffold(
@@ -109,6 +103,9 @@ class MainActivity : ComponentActivity() {
                                         onQuickNavigateSaved = { nav.navigate(StudentTab.Saved.route) },
                                         onQuickNavigateAnnouncements = { nav.navigate(StudentTab.Announcements.route) },
                                         onNavigateToAdmin = { nav.navigate("admin/login") },
+                                        onReact = { eventId, reaction ->
+                                            studentEventsVm.reactToEvent(eventId, reaction)
+                                        },
                                         getMediaForEvent = { homeVm.getMediaForEvent(it) }
                                     )
                                 }

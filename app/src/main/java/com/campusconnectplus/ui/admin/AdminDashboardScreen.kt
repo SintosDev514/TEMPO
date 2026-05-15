@@ -80,6 +80,12 @@ fun AdminDashboardScreen(vm: AdminDashboardViewModel, onViewDetails: () -> Unit 
                     icon = Icons.Outlined.Campaign,
                     trend = "3 expiring soon"
                 )
+                ContentRow(
+                    label = "Total Engagement",
+                    count = stats.totalReactions,
+                    icon = Icons.Outlined.ThumbUp,
+                    trend = "Reactions across events"
+                )
             }
 
             // Quick Actions / System Health

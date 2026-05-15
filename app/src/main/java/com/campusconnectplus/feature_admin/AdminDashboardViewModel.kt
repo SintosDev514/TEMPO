@@ -20,7 +20,8 @@ class AdminDashboardViewModel @Inject constructor(
         val totalMedia: Int = 0,
         val totalAnnouncements: Int = 0,
         val totalUsers: Int = 0,
-        val activeUsers: Int = 0
+        val activeUsers: Int = 0,
+        val totalReactions: Int = 0
     )
 
     val stats: StateFlow<DashboardStats> = combine(
@@ -34,7 +35,8 @@ class AdminDashboardViewModel @Inject constructor(
             totalMedia = media.size,
             totalAnnouncements = anns.size,
             totalUsers = users.size,
-            activeUsers = users.count { it.active }
+            activeUsers = users.count { it.active },
+            totalReactions = events.sumOf { it.reactionCounts.values.sum() }
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardStats())
 }

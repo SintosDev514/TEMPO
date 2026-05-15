@@ -3,6 +3,9 @@ package com.campusconnectplus.data.local.repository
 import com.campusconnectplus.data.local.entity.*
 import com.campusconnectplus.data.repository.*
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+
 fun EventEntity.toModel(): Event =
     Event(
         id = id,
@@ -11,6 +14,12 @@ fun EventEntity.toModel(): Event =
         venue = venue,
         description = description,
         category = EventCategory.valueOf(category),
+        reactionCounts = try {
+            Json.decodeFromString<Map<ReactionType, Int>>(reactionCounts)
+        } catch (e: Exception) {
+            emptyMap()
+        },
+        userReaction = userReaction?.let { ReactionType.valueOf(it) },
         updatedAt = updatedAt
     )
 
@@ -22,6 +31,8 @@ fun Event.toEntity(): EventEntity =
         venue = venue,
         description = description,
         category = category.name,
+        reactionCounts = Json.encodeToString(reactionCounts),
+        userReaction = userReaction?.name,
         updatedAt = updatedAt
     )
 
