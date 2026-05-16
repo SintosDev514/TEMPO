@@ -1,6 +1,7 @@
 package com.campusconnectplus.ui.admin
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import com.campusconnectplus.core.util.Constants
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
@@ -131,8 +133,44 @@ fun AdminLoginScreen(
                     )
 
                     authError?.let { msg ->
-                        Text(msg, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                        Spacer(Modifier.height(8.dp))
+                        val friendlyMsg = when {
+                            msg.contains("Invalid login credentials", ignoreCase = true) -> 
+                                "Incorrect email or password. Please check your credentials and try again."
+                            msg.contains("network", ignoreCase = true) || msg.contains("Unable to resolve host", ignoreCase = true) ->
+                                "Network connection lost. Please check your internet connection."
+                            msg.contains("maintenance", ignoreCase = true) || msg.contains("503", ignoreCase = true) || msg.contains("500", ignoreCase = true) ->
+                                "The system is currently undergoing maintenance. Please try again later."
+                            msg.contains("Too many requests", ignoreCase = true) || msg.contains("429", ignoreCase = true) ->
+                                "Too many attempts. For security reasons, please try again in a few minutes."
+                            else -> "An unexpected authentication error occurred. Please try again."
+                        }
+
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            color = Color(0xFFFEF2F2),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.ErrorOutline,
+                                    contentDescription = null,
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    text = friendlyMsg,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF991B1B),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
                     }
 
                     Spacer(Modifier.height(24.dp))
@@ -249,8 +287,44 @@ fun AdminSignUpScreen(
                         shape = RoundedCornerShape(12.dp)
                     )
                     authError?.let { msg ->
-                        Text(msg, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                        Spacer(Modifier.height(8.dp))
+                        val friendlyMsg = when {
+                            msg.contains("Invalid login credentials", ignoreCase = true) -> 
+                                "Incorrect email or password. Please check your credentials and try again."
+                            msg.contains("network", ignoreCase = true) || msg.contains("Unable to resolve host", ignoreCase = true) ->
+                                "Network connection lost. Please check your internet connection."
+                            msg.contains("maintenance", ignoreCase = true) || msg.contains("503", ignoreCase = true) || msg.contains("500", ignoreCase = true) ->
+                                "The system is currently undergoing maintenance. Please try again later."
+                            msg.contains("Too many requests", ignoreCase = true) || msg.contains("429", ignoreCase = true) ->
+                                "Too many attempts. For security reasons, please try again in a few minutes."
+                            else -> "An unexpected authentication error occurred. Please try again."
+                        }
+
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            color = Color(0xFFFEF2F2),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.ErrorOutline,
+                                    contentDescription = null,
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    text = friendlyMsg,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF991B1B),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
                     }
                     Spacer(Modifier.height(24.dp))
                     Button(
