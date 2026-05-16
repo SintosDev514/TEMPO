@@ -189,7 +189,6 @@ fun StudentSavedScreen(vm: StudentSavedViewModel) {
                                         event = event,
                                         isSaved = true,
                                         onToggleFavorite = { vm.removeEvent(event.id) },
-                                        onReact = { reaction -> vm.reactToEvent(event.id, reaction) },
                                         onClick = { selectedEvent = event },
                                         imageUrl = event.imageUrl ?: firstImageUrl
                                     )

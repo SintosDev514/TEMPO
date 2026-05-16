@@ -24,6 +24,23 @@ class AdminEventsViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    fun refresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                repo.sync()
+                _snackbarMessage.value = "Synced with cloud"
+            } catch (e: Exception) {
+                _snackbarMessage.value = "Sync failed: ${e.message}"
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
+
     fun clearSnackbarMessage() {
         _snackbarMessage.value = null
     }

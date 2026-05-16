@@ -46,6 +46,21 @@ class SupabaseAuthRepository @Inject constructor(
                     active = remoteUser?.active ?: true,
                     updatedAt = remoteUser?.updated_at ?: System.currentTimeMillis()
                 )
+                
+                // Sync to public.users table to ensure foreign keys work for reactions
+                try {
+                    postgrest["users"].upsert(RemoteUser(
+                        id = user.id,
+                        name = user.name,
+                        email = user.email,
+                        role = user.role.name,
+                        active = true,
+                        updated_at = System.currentTimeMillis()
+                    ))
+                } catch (e: Exception) {
+                    println("User sync error: ${e.message}")
+                }
+
                 AuthResult.Success(user)
             } else {
                 AuthResult.Error("Login failed: Session is null")

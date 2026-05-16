@@ -11,8 +11,8 @@ data class EventEntity(
     val venue: String,
     val description: String,
     val category: String,
+    val imageUrl: String? = null,
     val reactionCounts: String = "{}", // JSON Map
-    val totalReactions: Int = 0,
     val userReaction: String? = null,
     val updatedAt: Long
 )

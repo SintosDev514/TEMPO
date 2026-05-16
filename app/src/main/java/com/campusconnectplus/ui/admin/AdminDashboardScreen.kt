@@ -40,24 +40,6 @@ fun AdminDashboardScreen(vm: AdminDashboardViewModel, onViewDetails: () -> Unit 
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Main Stats Row
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                AnalyticsCard(
-                    label = "System Uptime",
-                    value = "99.9%",
-                    icon = Icons.Outlined.Speed,
-                    accent = Color(0xFF3B82F6),
-                    modifier = Modifier.weight(1f)
-                )
-                AnalyticsCard(
-                    label = "Health Score",
-                    value = "A+",
-                    icon = Icons.Outlined.CheckCircle,
-                    accent = Color(0xFF10B981),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
             SectionHeader("Content Overview", onViewDetails = onViewDetails)
 
             // Content Distribution Grid
@@ -88,37 +70,7 @@ fun AdminDashboardScreen(vm: AdminDashboardViewModel, onViewDetails: () -> Unit 
                 )
             }
 
-            // Quick Actions / System Health
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = Color.White,
-                border = androidx.compose.foundation.BorderStroke(1.dp, AdminColors.Border),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        Modifier.size(48.dp),
-                        shape = CircleShape,
-                        color = Color(0xFFF0FDF4)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Outlined.Shield, null, tint = Color(0xFF16A34A))
-                        }
-                    }
-                    Spacer(Modifier.width(16.dp))
-                    Column {
-                        Text("Platform Integrity", fontWeight = FontWeight.Bold, color = AdminColors.Dark)
-                        Text(
-                            "Database is synchronized and healthy.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = AdminColors.Secondary
-                        )
-                    }
-                }
-            }
+
 
             // Added Spacer to ensure bottom content isn't cut off by Navigation Bar
             Spacer(Modifier.height(84.dp))
@@ -142,38 +94,7 @@ private fun SectionHeader(title: String, onViewDetails: () -> Unit = {}) {
     }
 }
 
-@Composable
-private fun AnalyticsCard(
-    label: String,
-    value: String,
-    icon: ImageVector,
-    accent: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = Color.White,
-        border = androidx.compose.foundation.BorderStroke(1.dp, AdminColors.Border),
-        modifier = modifier
-    ) {
-        Column(Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    Modifier.size(40.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = accent.copy(alpha = 0.1f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(icon, null, modifier = Modifier.size(20.dp), tint = accent)
-                    }
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            Text(value, fontSize = 28.sp, fontWeight = FontWeight.Black, color = AdminColors.Dark)
-            Text(label, style = MaterialTheme.typography.labelMedium, color = AdminColors.Secondary)
-        }
-    }
-}
+
 
 @Composable
 private fun ContentRow(

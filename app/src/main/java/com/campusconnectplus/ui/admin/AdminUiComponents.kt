@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,7 +37,13 @@ object AdminColors {
 }
 
 @Composable
-fun TopBar(title: String, subtitle: String, onPrimary: (() -> Unit)? = null) {
+fun TopBar(
+    title: String,
+    subtitle: String,
+    isRefreshing: Boolean = false,
+    onRefresh: (() -> Unit)? = null,
+    onPrimary: (() -> Unit)? = null
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -63,20 +70,43 @@ fun TopBar(title: String, subtitle: String, onPrimary: (() -> Unit)? = null) {
                 )
             }
 
-            if (onPrimary != null) {
-                FilledTonalButton(
-                    onClick = onPrimary,
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Color.White.copy(alpha = 0.2f),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                    elevation = ButtonDefaults.filledTonalButtonElevation(defaultElevation = 0.dp)
-                ) {
-                    Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Create", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelLarge)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (onRefresh != null) {
+                    IconButton(
+                        onClick = onRefresh,
+                        enabled = !isRefreshing
+                    ) {
+                        if (isRefreshing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Outlined.Refresh,
+                                contentDescription = "Refresh",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                }
+
+                if (onPrimary != null) {
+                    FilledTonalButton(
+                        onClick = onPrimary,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = Color.White.copy(alpha = 0.2f),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                        elevation = ButtonDefaults.filledTonalButtonElevation(defaultElevation = 0.dp)
+                    ) {
+                        Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Create", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
         }

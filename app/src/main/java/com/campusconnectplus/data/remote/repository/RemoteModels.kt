@@ -21,9 +21,18 @@ data class RemoteEvent(
     val venue: String? = null,
     val description: String? = null,
     val category: String? = null,
-    val reaction_counts: Map<String, Int>? = null,
+    val image_url: String? = null,
+    val reaction_counts: kotlinx.serialization.json.JsonObject? = null,
     val updated_at: Long? = null,
     val created_at: Long? = null
+)
+
+@Serializable
+data class RemoteReaction(
+    val event_id: String,
+    val user_id: String,
+    val reaction_type: String,
+    val created_at: Long = System.currentTimeMillis()
 )
 
 @Serializable

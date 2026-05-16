@@ -288,7 +288,6 @@ fun StudentEventsScreen(vm: StudentEventsViewModel) {
                                             event = event,
                                             isSaved = favIds.contains(event.id),
                                             onToggleFavorite = { vm.toggleFavorite(event.id) },
-                                            onReact = { reaction -> vm.reactToEvent(event.id, reaction) },
                                             onClick = { selectedEvent = event },
                                             imageUrl = event.imageUrl ?: firstImageUrl
                                         )

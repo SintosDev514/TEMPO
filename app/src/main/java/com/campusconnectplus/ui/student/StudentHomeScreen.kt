@@ -57,7 +57,6 @@ fun StudentHomeScreen(
     onQuickNavigateSaved: () -> Unit,
     onQuickNavigateAnnouncements: () -> Unit,
     onNavigateToAdmin: () -> Unit = {},
-    onReact: (String, com.campusconnectplus.data.repository.ReactionType?) -> Unit = { _, _ -> },
     getMediaForEvent: (String) -> kotlinx.coroutines.flow.Flow<List<com.campusconnectplus.data.repository.Media>>
 ) {
     val stats by homeStats.collectAsState()
@@ -115,7 +114,7 @@ fun StudentHomeScreen(
                         Column {
                             SectionTitle("Event Highlights")
                             Spacer(Modifier.height(14.dp))
-                            EventHighlightsCarousel(eventList.take(5), getMediaForEvent, onReact)
+                            EventHighlightsCarousel(eventList.take(5), getMediaForEvent)
                         }
                     }
                     item { Spacer(Modifier.height(24.dp)) }
@@ -345,8 +344,7 @@ private fun SectionTitle(title: String) {
 @Composable
 private fun EventHighlightsCarousel(
     events: List<Event>,
-    getMediaForEvent: (String) -> kotlinx.coroutines.flow.Flow<List<com.campusconnectplus.data.repository.Media>>,
-    onReact: (String, com.campusconnectplus.data.repository.ReactionType?) -> Unit
+    getMediaForEvent: (String) -> kotlinx.coroutines.flow.Flow<List<com.campusconnectplus.data.repository.Media>>
 ) {
     val pagerState = rememberPagerState(pageCount = { events.size })
     
@@ -370,7 +368,6 @@ private fun EventHighlightsCarousel(
         HighlightCard(
             event, 
             imageUrl = event.imageUrl ?: firstImageUrl,
-            onReact = { reaction -> onReact(event.id, reaction) },
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -380,7 +377,6 @@ private fun EventHighlightsCarousel(
 private fun HighlightCard(
     event: Event,
     imageUrl: String?,
-    onReact: (com.campusconnectplus.data.repository.ReactionType?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -471,12 +467,7 @@ private fun HighlightCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    ReactionButton(
-                        currentReaction = event.userReaction,
-                        onReact = onReact
-                    )
-                    
-                    ReactionSummary(reactionCounts = event.reactionCounts)
+                    // Reactions removed
                 }
             }
         }

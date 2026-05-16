@@ -123,8 +123,7 @@ class OfflineFirstEventRepository @Inject constructor(
     }
 
     override suspend fun sync() {
-        remote.observeEvents().take(1).collectLatest { remoteList ->
-            local.sync(remoteList.map { it.toEntity() })
-        }
+        val remoteEvents = remote.observeEvents().take(1).first()
+        local.sync(remoteEvents.map { it.toEntity() })
     }
 }

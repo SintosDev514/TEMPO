@@ -24,9 +24,10 @@ object RepositoryModule {
     fun provideEventRepository(
         postgrest: Postgrest,
         realtime: Realtime,
+        auth: Auth,
         dao: com.campusconnectplus.data.local.dao.EventDao
     ): EventRepository {
-        val remote = SupabaseEventRepository(postgrest, realtime)
+        val remote = SupabaseEventRepository(postgrest, realtime, auth)
         return OfflineFirstEventRepository(remote, dao)
     }
 

@@ -3,9 +3,10 @@ package com.campusconnectplus.data.remote.repository
 import com.campusconnectplus.data.repository.Event
 import com.campusconnectplus.data.repository.EventRepository
 import com.campusconnectplus.data.repository.ReactionType
+import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import kotlinx.coroutines.Dispatchers
@@ -13,11 +14,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import javax.inject.Inject
 import java.util.UUID
 
-fun RemoteEvent.toModel() = Event(
+fun RemoteEvent.toModel(userReaction: ReactionType? = null) = Event(
     id = id ?: "",
     title = title ?: "Untitled Event",
     date = date ?: "",
@@ -29,10 +29,21 @@ fun RemoteEvent.toModel() = Event(
     } catch (e: Exception) { 
         com.campusconnectplus.data.repository.EventCategory.ACADEMIC 
     },
-    reactionCounts = reaction_counts?.mapKeys { 
-        try { com.campusconnectplus.data.repository.ReactionType.valueOf(it.key.uppercase()) } 
-        catch (e: Exception) { com.campusconnectplus.data.repository.ReactionType.LIKE }
+    imageUrl = image_url,
+    reactionCounts = reaction_counts?.let { json ->
+        json.keys.associate { key ->
+            val type = try { 
+                ReactionType.valueOf(key.uppercase()) 
+            } catch (e: Exception) { 
+                ReactionType.LIKE 
+            }
+            val count = json[key]?.let { 
+                if (it is kotlinx.serialization.json.JsonPrimitive) it.content.toIntOrNull() ?: 0 else 0 
+            } ?: 0
+            type to count
+        }
     } ?: emptyMap(),
+    userReaction = userReaction,
     updatedAt = updated_at ?: System.currentTimeMillis()
 )
 
@@ -43,17 +54,33 @@ fun Event.toRemote() = RemoteEvent(
     venue = venue,
     description = description,
     category = category.name,
+    image_url = imageUrl,
     updated_at = System.currentTimeMillis()
 )
 
 class SupabaseEventRepository @Inject constructor(
     private val postgrest: Postgrest,
-    private val realtime: Realtime
+    private val realtime: Realtime,
+    private val auth: Auth
 ) : EventRepository {
 
+    private suspend fun getMyReactions(): Map<String, ReactionType> {
+        val userId = auth.currentSessionOrNull()?.user?.id ?: return emptyMap()
+        return try {
+            postgrest["event_reactions"].select {
+                filter { eq("user_id", userId) }
+            }.decodeList<RemoteReaction>().associate { 
+                it.event_id to try { ReactionType.valueOf(it.reaction_type.uppercase()) } catch(e: Exception) { ReactionType.LIKE }
+            }
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
     override fun observeEvents(): Flow<List<Event>> = flow {
+        val myReactions = getMyReactions()
         val initialEvents = postgrest["events"].select().decodeList<RemoteEvent>()
-        emit(initialEvents.map { it.toModel() })
+        emit(initialEvents.map { it.toModel(myReactions[it.id]) })
 
         val channelId = "events_${UUID.randomUUID()}"
         val channel = realtime.channel(channelId)
@@ -61,10 +88,15 @@ class SupabaseEventRepository @Inject constructor(
             val changeFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
                 table = "events"
             }
+            val reactionChangeFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+                table = "event_reactions"
+            }
             channel.subscribe()
-            changeFlow.collect {
+            
+            kotlinx.coroutines.flow.merge(changeFlow, reactionChangeFlow).collect {
+                val currentMyReactions = getMyReactions()
                 val updatedEvents = postgrest["events"].select().decodeList<RemoteEvent>()
-                emit(updatedEvents.map { it.toModel() })
+                emit(updatedEvents.map { it.toModel(currentMyReactions[it.id]) })
             }
         } finally {
             try { realtime.removeChannel(channel) } catch (e: Exception) {}
@@ -72,10 +104,22 @@ class SupabaseEventRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     override fun observeEvent(eventId: String): Flow<Event?> = flow {
+        val userId = auth.currentSessionOrNull()?.user?.id
+        val myReaction = userId?.let { uid ->
+            postgrest["event_reactions"].select {
+                filter { 
+                    eq("event_id", eventId)
+                    eq("user_id", uid)
+                }
+            }.decodeSingleOrNull<RemoteReaction>()?.let { 
+                try { ReactionType.valueOf(it.reaction_type.uppercase()) } catch(e: Exception) { null }
+            }
+        }
+
         val initialEvent = postgrest["events"].select {
             filter { eq("id", eventId) }
         }.decodeSingleOrNull<RemoteEvent>()
-        emit(initialEvent?.toModel())
+        emit(initialEvent?.toModel(myReaction))
 
         val channelId = "event_${eventId}_${UUID.randomUUID()}"
         val channel = realtime.channel(channelId)
@@ -83,12 +127,27 @@ class SupabaseEventRepository @Inject constructor(
             val changeFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
                 table = "events"
             }
+            val reactionChangeFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+                table = "event_reactions"
+            }
             channel.subscribe()
-            changeFlow.collect {
+            
+            // Collect both event changes and user's own reaction changes
+            kotlinx.coroutines.flow.merge(changeFlow, reactionChangeFlow).collect {
+                val currentMyReaction = auth.currentSessionOrNull()?.user?.id?.let { uid ->
+                    postgrest["event_reactions"].select {
+                        filter { 
+                            eq("event_id", eventId)
+                            eq("user_id", uid)
+                        }
+                    }.decodeSingleOrNull<RemoteReaction>()?.let { 
+                        try { ReactionType.valueOf(it.reaction_type.uppercase()) } catch(e: Exception) { null }
+                    }
+                }
                 val updatedEvent = postgrest["events"].select {
                     filter { eq("id", eventId) }
                 }.decodeSingleOrNull<RemoteEvent>()
-                emit(updatedEvent?.toModel())
+                emit(updatedEvent?.toModel(currentMyReaction))
             }
         } finally {
             try { realtime.removeChannel(channel) } catch (e: Exception) {}
@@ -119,36 +178,34 @@ class SupabaseEventRepository @Inject constructor(
     }
 
     override suspend fun reactToEvent(eventId: String, reactionType: ReactionType?) {
+        val userId = auth.currentSessionOrNull()?.user?.id ?: throw Exception("You must be logged in to react")
         withContext(Dispatchers.IO) {
             try {
-                // Get current event to update counts
-                val current = postgrest["events"].select {
-                    filter { eq("id", eventId) }
-                }.decodeSingleOrNull<RemoteEvent>() ?: return@withContext
-
-                val counts = current.reaction_counts?.toMutableMap() ?: mutableMapOf()
-                
-                // Note: Simplified logic. Real implementation would track user-specific reactions
-                // in a separate table and use a DB trigger/RPC to update counts.
-                // Here we just increment for demo/local feel if we were updating counts directly.
-                // Since 'reaction_counts' is likely a summary field:
-                
-                reactionType?.let {
-                    val key = it.name.lowercase()
-                    counts[key] = (counts[key] ?: 0) + 1
-                }
-
-                postgrest["events"].update({
-                    set("reaction_counts", counts)
-                    set("updated_at", System.currentTimeMillis())
-                }) {
-                    filter { eq("id", eventId) }
+                if (reactionType == null) {
+                    postgrest["event_reactions"].delete {
+                        filter {
+                            eq("event_id", eventId)
+                            eq("user_id", userId)
+                        }
+                    }
+                } else {
+                    postgrest["event_reactions"].upsert(
+                        RemoteReaction(
+                            event_id = eventId,
+                            user_id = userId,
+                            reaction_type = reactionType.name
+                        )
+                    )
                 }
             } catch (e: Exception) {
                 println("REACT ERROR: ${e.message}")
+                throw e
             }
         }
     }
 
-    override suspend fun sync() {}
+    override suspend fun sync() {
+        // No-op for remote repo as it's already real-time.
+        // The offline-first repo will call observeEvents().take(1) to sync local DB.
+    }
 }

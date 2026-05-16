@@ -1,16 +1,23 @@
 package com.campusconnectplus.data.repository
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class MediaType { IMAGE, VIDEO }
+
+@Serializable
 enum class EventCategory { ACADEMIC, CULTURAL, SPORTS }
 
+@Serializable
 enum class ReactionType { LIKE, LOVE, WOW, SAD, ANGRY }
 
-
+@Serializable
 enum class AnnouncementStatus { ACTIVE, ARCHIVED }
 
-
+@Serializable
 enum class UserRole { STUDENT, ADMIN, ORGANIZER, MEDIA_TEAM }
 
+@Serializable
 data class Event(
     val id: String = "",
     val title: String,
@@ -24,6 +31,7 @@ data class Event(
     val updatedAt: Long = System.currentTimeMillis()
 )
 
+@Serializable
 data class Media(
     val id: String = "",
     val eventId: String,
@@ -43,6 +51,7 @@ data class Media(
     val updatedAt: Long = System.currentTimeMillis()
 )
 
+@Serializable
 data class Announcement(
     val id: String = "",
     val title: String,
@@ -58,6 +67,7 @@ data class Announcement(
     val updatedAt: Long = System.currentTimeMillis()
 )
 
+@Serializable
 data class User(
     val id: String = "",
     val name: String,

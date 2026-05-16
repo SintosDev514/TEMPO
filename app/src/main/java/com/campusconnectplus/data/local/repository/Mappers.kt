@@ -14,8 +14,13 @@ fun EventEntity.toModel(): Event =
         venue = venue,
         description = description,
         category = EventCategory.valueOf(category),
+        imageUrl = imageUrl,
         reactionCounts = try {
-            Json.decodeFromString<Map<ReactionType, Int>>(reactionCounts)
+            val rawMap = Json.decodeFromString<Map<String, Int>>(reactionCounts)
+            rawMap.entries.associate { (key, value) ->
+                val type = try { ReactionType.valueOf(key.uppercase()) } catch (e: Exception) { ReactionType.LIKE }
+                type to value
+            }
         } catch (e: Exception) {
             emptyMap()
         },
@@ -31,6 +36,7 @@ fun Event.toEntity(): EventEntity =
         venue = venue,
         description = description,
         category = category.name,
+        imageUrl = imageUrl,
         reactionCounts = Json.encodeToString(reactionCounts),
         userReaction = userReaction?.name,
         updatedAt = updatedAt

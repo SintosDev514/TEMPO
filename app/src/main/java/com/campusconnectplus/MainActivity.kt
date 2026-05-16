@@ -85,7 +85,6 @@ class MainActivity : ComponentActivity() {
 
                         composable(StudentTab.Home.route) {
                             val homeVm: com.campusconnectplus.feature_student.home.StudentHomeViewModel = hiltViewModel()
-                            val studentEventsVm: com.campusconnectplus.feature_student.events.StudentEventsViewModel = hiltViewModel()
                             LaunchedEffect(Unit) { DebugLog.log("MainActivity.kt:Home", "Student home composed", emptyMap(), "H1") }
                             Box(Modifier.fillMaxSize()) {
                                 StudentScaffold(
@@ -103,9 +102,6 @@ class MainActivity : ComponentActivity() {
                                         onQuickNavigateSaved = { nav.navigate(StudentTab.Saved.route) },
                                         onQuickNavigateAnnouncements = { nav.navigate(StudentTab.Announcements.route) },
                                         onNavigateToAdmin = { nav.navigate("admin/login") },
-                                        onReact = { eventId, reaction ->
-                                            studentEventsVm.reactToEvent(eventId, reaction)
-                                        },
                                         getMediaForEvent = { homeVm.getMediaForEvent(it) }
                                     )
                                 }
